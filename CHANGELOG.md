@@ -1,3 +1,10 @@
+# [1.0.0-dev.22](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.21...v1.0.0-dev.22) (2026-04-04)
+
+
+### Bug Fixes
+
+* **server:** increase socket.io max buffer size to prevent disconnects ([#42](https://github.com/0x1f320/why-did-you-render-mcp/issues/42)) ([11a271c](https://github.com/0x1f320/why-did-you-render-mcp/commit/11a271c097737596d11782ac4fce899a5ea7de22))
+
 # [1.0.0-dev.21](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.20...v1.0.0-dev.21) (2026-04-04)
 
 
