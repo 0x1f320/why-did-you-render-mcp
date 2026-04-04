@@ -39,6 +39,8 @@ export function createWsServer(port: number): WebSocketServer | null {
           for (const report of msg.payload) {
             store.addRender(report, projectId, msg.commitId)
           }
+        } else if (msg.type === "register") {
+          store.setTrackedComponents(msg.components, projectId)
         }
       } catch {
         console.error("[wdyr-mcp] invalid message received")

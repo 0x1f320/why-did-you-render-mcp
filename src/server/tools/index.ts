@@ -5,6 +5,7 @@ import { register as getProjects } from "./get-projects.js"
 import { register as getRenderSummary } from "./get-render-summary.js"
 import { register as getRendersByCommit } from "./get-renders-by-commit.js"
 import { register as getRenders } from "./get-renders.js"
+import { register as getTrackedComponents } from "./get-tracked-components.js"
 
 export function registerTools(server: McpServer): void {
   getRenders(server)
@@ -12,5 +13,6 @@ export function registerTools(server: McpServer): void {
   getCommits(server)
   getRendersByCommit(server)
   getProjects(server)
+  getTrackedComponents(server)
   clearRenders(server)
 }
