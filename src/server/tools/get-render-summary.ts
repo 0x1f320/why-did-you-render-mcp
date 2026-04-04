@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { store } from "../store/index.js"
+import { store, summarize, summarizeByCommit } from "../store/index.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
 
@@ -57,7 +57,7 @@ function formatReasons(reasons: {
 }
 
 function aggregateSummary(projectId?: string) {
-  const summary = store.getSummary(projectId)
+  const summary = summarize(store.getAllRenders(projectId))
 
   if (Object.keys(summary).length === 0) {
     return textResult("No renders recorded yet.")
@@ -79,7 +79,7 @@ function aggregateSummary(projectId?: string) {
 }
 
 function commitSummary(projectId?: string) {
-  const summary = store.getSummaryByCommit(projectId)
+  const summary = summarizeByCommit(store.getAllRenders(projectId))
 
   if (Object.keys(summary).length === 0) {
     return textResult("No renders with commit IDs recorded yet.")

@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { store } from "../store/index.js"
+import { snapshots } from "../store/index.js"
 import { textResult } from "./utils/text-result.js"
 
 export function register(server: McpServer): void {
@@ -20,12 +20,12 @@ export function register(server: McpServer): void {
       },
     },
     async ({ before, after }) => {
-      const beforeSnap = store.getSnapshot(before)
+      const beforeSnap = snapshots.get(before)
       if (!beforeSnap) {
         return textResult(`Snapshot "${before}" not found.`)
       }
 
-      const afterSnap = store.getSnapshot(after)
+      const afterSnap = snapshots.get(after)
       if (!afterSnap) {
         return textResult(`Snapshot "${after}" not found.`)
       }

@@ -14,7 +14,7 @@ import {
   setPaused,
   setResumed,
 } from "./pause-state.js"
-import { store } from "./store/index.js"
+import { registry, store } from "./store/index.js"
 
 const RETRY_INTERVAL_MS = 3_000
 
@@ -40,13 +40,13 @@ function attachHandlers(io: IoServer, port: number) {
 
     socket.on("register", (components, projectId) => {
       socket.data.projectId = projectId
-      store.setTrackedComponents(components, projectId)
+      registry.setTrackedComponents(components, projectId)
       if (isPaused(projectId)) socket.emit("pause")
     })
 
     socket.on("config", (config, projectId) => {
       socket.data.projectId = projectId
-      store.setWdyrConfig(config, projectId)
+      registry.setWdyrConfig(config, projectId)
     })
 
     socket.on("relay-pause", async (projectId) => {
@@ -63,7 +63,7 @@ function attachHandlers(io: IoServer, port: number) {
 
     socket.on("hmr", (projectId) => {
       socket.data.projectId = projectId
-      store.recordHmr(projectId)
+      registry.recordHmr(projectId)
     })
 
     socket.on("relay-resume", async (projectId) => {

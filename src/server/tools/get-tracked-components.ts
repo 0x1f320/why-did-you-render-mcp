@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import type { WdyrConfig } from "../../types.js"
-import { store } from "../store/index.js"
+import { registry, store } from "../store/index.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
 
@@ -64,8 +64,22 @@ export function register(server: McpServer): void {
       const resolved = resolveProject(project)
       if (resolved.error) return textResult(resolved.error)
 
-      const configs = store.getWdyrConfig(resolved.projectId)
-      const tracked = store.getTrackedComponents(resolved.projectId)
+      const configs = registry.getWdyrConfig(resolved.projectId)
+
+      const projects = resolved.projectId
+        ? [resolved.projectId]
+        : store.getProjects()
+      const tracked: Record<
+        string,
+        { registered: string[]; observed: string[] }
+      > = {}
+      for (const proj of projects) {
+        const observed = [
+          ...new Set(store.getAllRenders(proj).map((r) => r.displayName)),
+        ]
+        const registered = registry.getTrackedComponents(proj)
+        tracked[proj] = { registered, observed }
+      }
 
       const hasConfig = Object.keys(configs).length > 0
       const hasTracked = Object.keys(tracked).length > 0
@@ -77,12 +91,12 @@ export function register(server: McpServer): void {
       }
 
       const lines: string[] = []
-      const projects = new Set([
+      const allProjects = new Set([
         ...Object.keys(configs),
         ...Object.keys(tracked),
       ])
 
-      for (const proj of projects) {
+      for (const proj of allProjects) {
         lines.push(`[${proj}]`)
 
         const config = configs[proj]
