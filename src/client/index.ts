@@ -40,9 +40,14 @@ function patchDevToolsHook(onCommit: () => void): void {
 export function buildOptions(opts?: ClientOptions) {
   const wsUrl = opts?.wsUrl ?? DEFAULT_WS_URL
   const projectId = opts?.projectId ?? globalThis.location?.origin ?? "default"
+  const MAX_QUEUE_SIZE = 1000
+  const BASE_DELAY = 1000
+  const MAX_DELAY = 30000
+
   let ws: WebSocket | null = null
   let queue: WsMessage[] = []
   let commitId = 0
+  let retryDelay = BASE_DELAY
 
   patchDevToolsHook(() => {
     commitId++
@@ -52,6 +57,7 @@ export function buildOptions(opts?: ClientOptions) {
     ws = new WebSocket(wsUrl)
 
     ws.addEventListener("open", () => {
+      retryDelay = BASE_DELAY
       for (const msg of queue) {
         ws?.send(JSON.stringify(msg))
       }
@@ -60,7 +66,8 @@ export function buildOptions(opts?: ClientOptions) {
 
     ws.addEventListener("close", () => {
       ws = null
-      setTimeout(connect, 1000)
+      setTimeout(connect, retryDelay)
+      retryDelay = Math.min(retryDelay * 2, MAX_DELAY)
     })
 
     ws.addEventListener("error", () => {
@@ -74,6 +81,9 @@ export function buildOptions(opts?: ClientOptions) {
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msg))
     } else {
+      if (queue.length >= MAX_QUEUE_SIZE) {
+        queue.shift()
+      }
       queue.push(msg)
     }
   }
