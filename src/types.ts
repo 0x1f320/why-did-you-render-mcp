@@ -88,6 +88,7 @@ export interface RenderReport {
   reason: SafeReasonForUpdate
   hookName?: string
   stackFrames?: StackFrame[]
+  actualDuration?: number
 }
 
 export interface WdyrConfig {

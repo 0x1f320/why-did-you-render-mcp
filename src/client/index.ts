@@ -35,7 +35,30 @@ export interface ClientOptions extends WhyDidYouRenderOptions {
   projectId?: string
 }
 
-function patchDevToolsHook(onCommit: () => void): void {
+interface FiberDurations {
+  [displayName: string]: number[]
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: React Fiber internals are untyped
+function collectFiberDurations(fiber: any, out: FiberDurations): void {
+  if (fiber == null) return
+
+  const duration: number | undefined = fiber.actualDuration
+  if (typeof duration === "number" && duration > 0) {
+    const name: string | undefined = fiber.type?.displayName ?? fiber.type?.name
+    if (name) {
+      if (!out[name]) out[name] = []
+      out[name].push(duration)
+    }
+  }
+
+  collectFiberDurations(fiber.child, out)
+  collectFiberDurations(fiber.sibling, out)
+}
+
+function patchDevToolsHook(
+  onCommit: (durations: FiberDurations) => void,
+): void {
   if (!globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
     globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       supportsFiber: true,
@@ -48,7 +71,14 @@ function patchDevToolsHook(onCommit: () => void): void {
   const hook = globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__
   const original = hook.onCommitFiberRoot.bind(hook)
   hook.onCommitFiberRoot = (...args: unknown[]) => {
-    onCommit()
+    const durations: FiberDurations = {}
+    // args: [rendererID, fiberRoot, priorityLevel]
+    // biome-ignore lint/suspicious/noExplicitAny: React Fiber internals are untyped
+    const fiberRoot = args[1] as any
+    if (fiberRoot?.current) {
+      collectFiberDurations(fiberRoot.current, durations)
+    }
+    onCommit(durations)
     return original(...args)
   }
 }
@@ -80,9 +110,11 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
   const projectId = _projectId ?? globalThis.location?.origin ?? "default"
 
   let commitId = 0
+  let commitDurations: FiberDurations = {}
 
-  patchDevToolsHook(() => {
+  patchDevToolsHook((durations) => {
     commitId++
+    commitDurations = durations
   })
 
   const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(url, {
@@ -121,7 +153,11 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
     error: Error
   }
 
-  let pendingBatch: { commitId: number; items: PendingItem[] } | null = null
+  let pendingBatch: {
+    commitId: number
+    items: PendingItem[]
+    durations: FiberDurations
+  } | null = null
   let flushScheduled = false
 
   async function flushBatch() {
@@ -131,14 +167,23 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
     const batch = pendingBatch
     pendingBatch = null
 
+    const durationCounters: Record<string, number> = {}
+
     const reports = await Promise.all(
       batch.items.map(async ({ info, error }) => {
         const stackFrames = await parseStack(error)
+
+        const durations = batch.durations[info.displayName]
+        const idx = durationCounters[info.displayName] ?? 0
+        durationCounters[info.displayName] = idx + 1
+        const actualDuration = durations?.[idx]
+
         const report: RenderReport = {
           displayName: info.displayName,
           reason: sanitizeReason(info.reason),
           hookName: info.hookName,
           ...(stackFrames.length > 0 && { stackFrames }),
+          ...(typeof actualDuration === "number" && { actualDuration }),
         }
         return report
       }),
@@ -161,7 +206,11 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
         pendingBatch.items.push({ info, error })
       } else {
         if (pendingBatch) flushBatch()
-        pendingBatch = { commitId, items: [{ info, error }] }
+        pendingBatch = {
+          commitId,
+          items: [{ info, error }],
+          durations: commitDurations,
+        }
       }
 
       if (!flushScheduled) {

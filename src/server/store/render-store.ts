@@ -329,6 +329,9 @@ export class RenderStore {
       if (Array.isArray(r.reason.propsDifferences)) entry.reasons.props++
       if (Array.isArray(r.reason.stateDifferences)) entry.reasons.state++
       if (Array.isArray(r.reason.hookDifferences)) entry.reasons.hooks++
+      if (typeof r.actualDuration === "number") {
+        entry.totalDuration = (entry.totalDuration ?? 0) + r.actualDuration
+      }
     }
 
     return summary
@@ -357,6 +360,9 @@ export class RenderStore {
       if (Array.isArray(r.reason.propsDifferences)) entry.reasons.props++
       if (Array.isArray(r.reason.stateDifferences)) entry.reasons.state++
       if (Array.isArray(r.reason.hookDifferences)) entry.reasons.hooks++
+      if (typeof r.actualDuration === "number") {
+        entry.totalDuration = (entry.totalDuration ?? 0) + r.actualDuration
+      }
     }
 
     return summary
