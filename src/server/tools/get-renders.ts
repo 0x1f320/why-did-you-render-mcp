@@ -10,7 +10,7 @@ export function register(server: McpServer): void {
     {
       title: "Get Renders",
       description:
-        "Returns all re-renders collected from the browser. If multiple projects are active and no project is specified, the tool will ask you to disambiguate by asking the user for their dev server URL.",
+        "Returns all re-renders collected from the browser, including stack traces that show the hook chain and component tree that triggered each render. Use the stackFrames field to locate the exact source file and line. If multiple projects are active and no project is specified, the tool will ask you to disambiguate by asking the user for their dev server URL.",
       inputSchema: {
         component: z
           .string()
