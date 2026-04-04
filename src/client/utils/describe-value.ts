@@ -37,7 +37,11 @@ function resolveComponentInfo(type: unknown): {
   // Unwrap memo/forwardRef wrappers
   for (let i = 0; i < 5; i++) {
     if (typeof current !== "object" || current === null) break
-    const wrapper = current as { $$typeof?: symbol; type?: unknown; render?: unknown }
+    const wrapper = current as {
+      $$typeof?: symbol
+      type?: unknown
+      render?: unknown
+    }
     if (wrapper.$$typeof === REACT_MEMO_TYPE) {
       memo = true
       current = wrapper.type
