@@ -1,3 +1,10 @@
+# [1.0.0-dev.17](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.16...v1.0.0-dev.17) (2026-04-04)
+
+
+### Features
+
+* **tools:** add get_commits tool with timestamp and component metadata ([#33](https://github.com/0x1f320/why-did-you-render-mcp/issues/33)) ([415a84f](https://github.com/0x1f320/why-did-you-render-mcp/commit/415a84ff9f11b7bbbb848cb5cc4e02d3692e9e5f))
+
 # [1.0.0-dev.16](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.15...v1.0.0-dev.16) (2026-04-04)
 
 
