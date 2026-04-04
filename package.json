@@ -1,0 +1,33 @@
+{
+	"name": "@0x1f320/why-did-you-render-mcp",
+	"version": "0.0.0",
+	"type": "module",
+	"description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
+	"license": "MIT",
+	"bin": {
+		"why-did-you-render-mcp": "./dist/server/index.js"
+	},
+	"exports": {
+		".": "./dist/server/index.js",
+		"./client": "./dist/client/index.js"
+	},
+	"files": ["dist"],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"check": "biome check .",
+		"check:fix": "biome check --fix ."
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.12.1",
+		"ws": "^8.18.0",
+		"zod": "^3.24.4"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/node": "^22.14.1",
+		"@types/ws": "^8.18.0",
+		"tsup": "^8.4.0",
+		"typescript": "^5.8.3"
+	}
+}
