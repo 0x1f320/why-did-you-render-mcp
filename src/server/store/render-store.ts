@@ -15,6 +15,8 @@ import type {
   ComponentSummary,
   ParsedFilename,
   RenderWithProject,
+  Snapshot,
+  SnapshotMeta,
   StoredRender,
 } from "./types.js"
 import { readJsonl } from "./utils/read-jsonl.js"
@@ -32,6 +34,7 @@ const NOCOMMIT = "nocommit"
 
 export class RenderStore {
   private readonly dir: string
+  private readonly snapshotsDir: string
   private readonly buffers = new Map<string, StoredRender[]>()
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly dicts = new Map<string, ValueDict>()
@@ -41,6 +44,7 @@ export class RenderStore {
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
+    this.snapshotsDir = join(homedir(), ".wdyr-mcp", "snapshots")
     mkdirSync(this.dir, { recursive: true })
   }
 
@@ -407,6 +411,43 @@ export class RenderStore {
     }
 
     return result
+  }
+
+  saveSnapshot(name: string, projectId?: string): void {
+    mkdirSync(this.snapshotsDir, { recursive: true })
+    const snapshot: Snapshot = {
+      name,
+      timestamp: Date.now(),
+      data: this.getSummary(projectId),
+    }
+    writeFileSync(
+      join(this.snapshotsDir, `${name}.json`),
+      JSON.stringify(snapshot, null, 2),
+    )
+  }
+
+  listSnapshots(): SnapshotMeta[] {
+    if (!existsSync(this.snapshotsDir)) return []
+    return readdirSync(this.snapshotsDir)
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => {
+        const content = readFileSync(join(this.snapshotsDir, f), "utf-8")
+        const snapshot = JSON.parse(content) as Snapshot
+        return { name: snapshot.name, timestamp: snapshot.timestamp }
+      })
+  }
+
+  getSnapshot(name: string): Snapshot | null {
+    const file = join(this.snapshotsDir, `${name}.json`)
+    if (!existsSync(file)) return null
+    return JSON.parse(readFileSync(file, "utf-8")) as Snapshot
+  }
+
+  deleteSnapshot(name: string): boolean {
+    const file = join(this.snapshotsDir, `${name}.json`)
+    if (!existsSync(file)) return false
+    unlinkSync(file)
+    return true
   }
 
   private rewriteFile(filePath: string, renders: StoredRender[]): void {
