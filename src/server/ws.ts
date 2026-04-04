@@ -6,19 +6,13 @@ import type {
   ServerToClientEvents,
   SocketData,
 } from "../types.js"
+import type { IoServer } from "./io.js"
+import { setIo } from "./io.js"
 import { store } from "./store/index.js"
 
 const RETRY_INTERVAL_MS = 3_000
 
-function attachHandlers(
-  io: Server<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-  >,
-  port: number,
-) {
+function attachHandlers(io: IoServer, port: number) {
   io.on("connection", (socket) => {
     console.error(`[wdyr-mcp] browser connected (http://localhost:${port})`)
     socket.data.projectId = null
@@ -100,6 +94,7 @@ export function createWsServer(port: number): WsHandle {
         )
         io?.close()
         io = null
+        setIo(null)
         httpServer = null
         startRetry()
       } else {
@@ -111,6 +106,7 @@ export function createWsServer(port: number): WsHandle {
       console.error(
         `[wdyr-mcp] socket.io server listening on http://localhost:${port}`,
       )
+      setIo(io)
       stopRetry()
     })
   }
@@ -133,6 +129,7 @@ export function createWsServer(port: number): WsHandle {
       stopped = true
       stopRetry()
       io?.close()
+      setIo(null)
     },
   }
 }
