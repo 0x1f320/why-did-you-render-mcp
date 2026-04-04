@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { setIo } from "./io.js"
 import { registerTools } from "./tools/index.js"
 import { createWsServer } from "./ws.js"
 
@@ -15,8 +14,7 @@ registerTools(server)
 
 async function main() {
   const port = Number(process.env.WDYR_WS_PORT) || DEFAULT_WS_PORT
-  const io = createWsServer(port)
-  setIo(io)
+  const ws = createWsServer(port)
 
   const transport = new StdioServerTransport()
   await server.connect(transport)
@@ -27,7 +25,7 @@ async function main() {
     if (shuttingDown) return
     shuttingDown = true
     console.error("[wdyr-mcp] Shutting down…")
-    io?.close()
+    ws.close()
     await server.close()
     process.exit(0)
   }
