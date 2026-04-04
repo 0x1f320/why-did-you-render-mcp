@@ -26,13 +26,14 @@ Browser (project-b) ──┤
 - **Client** (`src/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket. Auto-tags messages with `location.origin` as the project identifier. Patches `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot` to track React commit IDs, enabling per-commit grouping of renders.
 - **Server** (`src/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, persists render reports to JSONL files, and exposes them via MCP tools over stdio.
   - `ws.ts` — WebSocket server with EADDRINUSE graceful handling.
-  - `store/` — `RenderStore` class backed by JSONL files in `~/.wdyr-mcp/renders/`.
+  - `store/` — `RenderStore` class backed by JSONL files in `~/.wdyr-mcp/renders/`. Uses value dictionary deduplication (xxhash-wasm) to keep files compact.
   - `tools/` — One file per MCP tool: `get-unnecessary-renders`, `get-render-summary`, `get-commits`, `get-renders-by-commit`, `get-projects`, `clear-renders`.
 - **Types** (`src/types.ts`) — Shared type definitions including `RenderReport`, `SafeReasonForUpdate`, and `WsMessage`.
 
 ### Design Decisions
 
 - **JSONL over SQLite** — Render data is ephemeral and the access pattern is simple (append, read all, filter, clear). JSONL avoids native addon dependencies (better-sqlite3) and migration complexity while supporting concurrent multi-process read/write.
+- **Value dictionary deduplication** — Render reports often contain identical `prevValue`/`nextValue` objects across thousands of entries (e.g. the same prop object causing repeated re-renders). To avoid JSONL files growing to hundreds of MB, each file's first line is a content-addressed dictionary (`@@dict`) mapping xxhash-wasm h64 hashes to unique values. Render lines reference dictionary entries via `@@ref:<hash>` sentinel strings instead of inlining the full value. Only object/array values are dehydrated; primitives stay inline. On read, `readJsonl` transparently hydrates refs back to actual values, so consumers are unaffected. The dictionary is rewritten on each flush (acceptable because deduplication keeps files small).
 - **No daemon process** — Instead of a separate long-running daemon managing shared state, each MCP instance is independent. The WS server is opportunistically claimed by whichever instance starts first; data sharing happens through the filesystem.
 - **Project ID from `location.origin`** — The browser's origin is used as the project identifier because it's auto-available (zero config for the user) and unique per dev server. The MCP server doesn't need to know the project ID upfront — tools query the JSONL store and disambiguate as needed.
 - **One file per function** — Tools and utilities are split into individual files (`tools/<tool-name>.ts`, `store/utils/<fn-name>.ts`) for clarity. Each file has a single responsibility.
@@ -46,7 +47,8 @@ Browser (project-b) ──┤
 - **Package Manager**: pnpm
 - **Linter/Formatter**: Biome (tabs, recommended rules)
 - **Protocol**: MCP SDK (`@modelcontextprotocol/sdk`), WebSocket (`ws`)
-- **Storage**: JSONL files (`~/.wdyr-mcp/renders/`)
+- **Storage**: JSONL files (`~/.wdyr-mcp/renders/`) with value dictionary deduplication
+- **Hashing**: xxhash-wasm (WASM, no native addons)
 
 ## Commands
 
@@ -69,9 +71,10 @@ src/
 │   │   ├── render-store.ts         # RenderStore class
 │   │   ├── types.ts                # StoredRender, RenderWithProject
 │   │   └── utils/
-│   │       ├── read-jsonl.ts       # JSONL file parser
+│   │       ├── read-jsonl.ts       # JSONL file parser (dict-aware)
 │   │       ├── sanitize-project-id.ts
-│   │       └── to-result.ts        # StoredRender → RenderWithProject
+│   │       ├── to-result.ts        # StoredRender → RenderWithProject
+│   │       └── value-dict.ts       # xxhash-wasm dehydrate/hydrate
 │   └── tools/
 │       ├── index.ts                # registerTools barrel
 │       ├── get-unnecessary-renders.ts
