@@ -1,3 +1,10 @@
+# [1.0.0-dev.21](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.20...v1.0.0-dev.21) (2026-04-04)
+
+
+### Bug Fixes
+
+* filter React internals by name and resolve source maps in stack traces ([#41](https://github.com/0x1f320/why-did-you-render-mcp/issues/41)) ([19ede10](https://github.com/0x1f320/why-did-you-render-mcp/commit/19ede108c4a84daceb331e5244a4ac754928e46b))
+
 # [1.0.0-dev.20](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.19...v1.0.0-dev.20) (2026-04-04)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@0x1f320.sh/why-did-you-render-mcp",
-  "version": "1.0.0-dev.20",
+  "version": "1.0.0-dev.21",
   "type": "module",
   "description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
   "license": "MIT",
