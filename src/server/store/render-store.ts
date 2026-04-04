@@ -1,10 +1,10 @@
 import {
-  appendFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
   unlinkSync,
+  writeFileSync,
 } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
@@ -13,6 +13,12 @@ import type { RenderWithProject, StoredRender } from "./types.js"
 import { readJsonl } from "./utils/read-jsonl.js"
 import { sanitizeProjectId } from "./utils/sanitize-project-id.js"
 import { toResult } from "./utils/to-result.js"
+import {
+  DICT_KEY,
+  type ValueDict,
+  dehydrate,
+  ensureReady,
+} from "./utils/value-dict.js"
 
 const FLUSH_DELAY_MS = 200
 
@@ -20,6 +26,7 @@ export class RenderStore {
   private readonly dir: string
   private readonly buffers = new Map<string, StoredRender[]>()
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
+  private readonly dicts = new Map<string, ValueDict>()
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -45,8 +52,23 @@ export class RenderStore {
 
     this.timers.set(
       projectId,
-      setTimeout(() => this.flush(projectId), FLUSH_DELAY_MS),
+      setTimeout(() => {
+        this.flushAsync(projectId).catch((err) =>
+          console.error(`[wdyr-mcp] flush error for ${projectId}:`, err),
+        )
+      }, FLUSH_DELAY_MS),
     )
+  }
+
+  async flushAsync(projectId?: string): Promise<void> {
+    await ensureReady()
+    if (projectId) {
+      this.flushProject(projectId)
+    } else {
+      for (const id of this.buffers.keys()) {
+        this.flushProject(id)
+      }
+    }
   }
 
   flush(projectId?: string): void {
@@ -63,8 +85,28 @@ export class RenderStore {
     const buf = this.buffers.get(projectId)
     if (!buf || buf.length === 0) return
 
-    const lines = buf.map((s) => JSON.stringify(s)).join("\n")
-    appendFileSync(this.projectFile(projectId), `${lines}\n`)
+    let dict = this.dicts.get(projectId)
+    if (!dict) {
+      dict = {}
+      this.dicts.set(projectId, dict)
+    }
+
+    const dehydrated = buf.map((r) => dehydrate(r, dict))
+
+    // Read existing data lines (skip old dict line)
+    const file = this.projectFile(projectId)
+    const existingLines = this.readDataLines(file)
+
+    // Rewrite: dict line + existing data + new data
+    const newLines = dehydrated.map((r) => JSON.stringify(r))
+    const allDataLines = [...existingLines, ...newLines]
+
+    const hasDictEntries = Object.keys(dict).length > 0
+    const parts = hasDictEntries
+      ? [JSON.stringify({ [DICT_KEY]: dict }), ...allDataLines]
+      : allDataLines
+
+    writeFileSync(file, `${parts.join("\n")}\n`)
 
     buf.length = 0
     const timer = this.timers.get(projectId)
@@ -72,6 +114,17 @@ export class RenderStore {
       clearTimeout(timer)
       this.timers.delete(projectId)
     }
+  }
+
+  private readDataLines(file: string): string[] {
+    if (!existsSync(file)) return []
+    return readFileSync(file, "utf-8")
+      .split("\n")
+      .filter((line) => {
+        if (!line) return false
+        if (line.startsWith(`{"${DICT_KEY}"`)) return false
+        return true
+      })
   }
 
   getAllRenders(projectId?: string): RenderWithProject[] {
@@ -98,6 +151,7 @@ export class RenderStore {
   clearRenders(projectId?: string): void {
     if (projectId) {
       this.buffers.delete(projectId)
+      this.dicts.delete(projectId)
       const timer = this.timers.get(projectId)
       if (timer) {
         clearTimeout(timer)
@@ -111,6 +165,7 @@ export class RenderStore {
       }
       this.buffers.clear()
       this.timers.clear()
+      this.dicts.clear()
       for (const f of this.jsonlFiles()) {
         unlinkSync(join(this.dir, f))
       }
@@ -122,10 +177,14 @@ export class RenderStore {
     const projects = new Set<string>()
 
     for (const f of this.jsonlFiles()) {
-      const firstLine = readFileSync(join(this.dir, f), "utf-8").split("\n")[0]
-      if (!firstLine) continue
-      const stored = JSON.parse(firstLine) as StoredRender
-      projects.add(stored.projectId)
+      const lines = readFileSync(join(this.dir, f), "utf-8").split("\n")
+      for (const line of lines) {
+        if (!line) continue
+        const parsed = JSON.parse(line)
+        if (DICT_KEY in parsed) continue
+        projects.add((parsed as StoredRender).projectId)
+        break
+      }
     }
 
     return [...projects]

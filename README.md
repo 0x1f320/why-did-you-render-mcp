@@ -126,6 +126,7 @@ Browser (project-b) ──┤
 - **Multiple MCP instances** can run simultaneously. Only the first instance starts the WebSocket server; others gracefully skip. All instances share the same JSONL data directory.
 - **Multi-project support** — Each project is identified by `location.origin`. Render data is stored in per-project JSONL files.
 - **No daemon required** — Each MCP instance is independent. The WebSocket server is opportunistically claimed by whichever instance starts first.
+- **Value dictionary deduplication** — Render reports often repeat the same `prevValue`/`nextValue` objects across thousands of entries. Each JSONL file stores a content-addressed dictionary on its first line, mapping xxhash-wasm hashes to unique values. Render lines reference them via `@@ref:<hash>` sentinels instead of inlining the full object, dramatically reducing file size. Reads hydrate refs transparently.
 
 ## Configuration
 
