@@ -1,3 +1,10 @@
+# [1.0.0-dev.13](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.12...v1.0.0-dev.13) (2026-04-04)
+
+
+### Features
+
+* **tools:** add groupBy option to get_render_summary ([#29](https://github.com/0x1f320/why-did-you-render-mcp/issues/29)) ([56261b3](https://github.com/0x1f320/why-did-you-render-mcp/commit/56261b3388fac811efd572a6024b6937af192ddd))
+
 # [1.0.0-dev.12](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.11...v1.0.0-dev.12) (2026-04-04)
 
 
