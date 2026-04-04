@@ -1,3 +1,10 @@
+# [1.1.0-dev.6](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.5...v1.1.0-dev.6) (2026-04-04)
+
+
+### Features
+
+* add HMR detection and wait_for_renders tool ([#52](https://github.com/0x1f320/why-did-you-render-mcp/issues/52)) ([807fdda](https://github.com/0x1f320/why-did-you-render-mcp/commit/807fdda8f333ba77b4917b4e52d94415b1cc195b))
+
 # [1.1.0-dev.5](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.4...v1.1.0-dev.5) (2026-04-04)
 
 
