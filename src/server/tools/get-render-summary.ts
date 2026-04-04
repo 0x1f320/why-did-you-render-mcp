@@ -39,6 +39,11 @@ export function register(server: McpServer): void {
   )
 }
 
+function formatDuration(totalDuration?: number): string {
+  if (totalDuration == null) return ""
+  return ` (${totalDuration.toFixed(1)}ms)`
+}
+
 function formatReasons(reasons: {
   props: number
   state: number
@@ -61,8 +66,12 @@ function aggregateSummary(projectId?: string) {
   const lines: string[] = []
   for (const [proj, components] of Object.entries(summary)) {
     lines.push(`[${proj}]`)
-    for (const [name, { count, reasons }] of Object.entries(components)) {
-      lines.push(`  ${name}: ${count} re-render(s)${formatReasons(reasons)}`)
+    for (const [name, { count, reasons, totalDuration }] of Object.entries(
+      components,
+    )) {
+      lines.push(
+        `  ${name}: ${count} re-render(s)${formatReasons(reasons)}${formatDuration(totalDuration)}`,
+      )
     }
   }
 
@@ -86,8 +95,12 @@ function commitSummary(projectId?: string) {
       const components = commits[commitId]
       const total = Object.values(components).reduce((s, c) => s + c.count, 0)
       lines.push(`  Commit #${commitId} (${total} re-render(s)):`)
-      for (const [name, { count, reasons }] of Object.entries(components)) {
-        lines.push(`    ${name}: ${count}${formatReasons(reasons)}`)
+      for (const [name, { count, reasons, totalDuration }] of Object.entries(
+        components,
+      )) {
+        lines.push(
+          `    ${name}: ${count}${formatReasons(reasons)}${formatDuration(totalDuration)}`,
+        )
       }
     }
   }

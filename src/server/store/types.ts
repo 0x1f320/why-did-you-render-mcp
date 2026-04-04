@@ -29,4 +29,5 @@ export interface CommitInfo {
 export interface ComponentSummary {
   count: number
   reasons: { props: number; state: number; hooks: number }
+  totalDuration?: number
 }
