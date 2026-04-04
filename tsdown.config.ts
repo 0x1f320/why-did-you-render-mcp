@@ -1,4 +1,4 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from "tsdown";
 
 export default defineConfig([
 	{
@@ -8,7 +8,8 @@ export default defineConfig([
 		target: "node20",
 		outDir: "dist",
 		dts: true,
-		banner: { js: "#!/usr/bin/env node" },
+		outputOptions: { banner: "#!/usr/bin/env node" },
+		hash: false,
 	},
 	{
 		entry: { "client/index": "src/client/index.ts" },
@@ -16,5 +17,6 @@ export default defineConfig([
 		platform: "browser",
 		outDir: "dist",
 		dts: true,
+		hash: false,
 	},
 ]);
