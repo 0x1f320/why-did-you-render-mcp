@@ -34,9 +34,7 @@
       "require": "./dist/client/index.cjs"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -76,8 +74,6 @@
     "access": "public"
   },
   "pnpm": {
-    "ignoredBuiltDependencies": [
-      "@biomejs/biome"
-    ]
+    "ignoredBuiltDependencies": ["@biomejs/biome"]
   }
 }
