@@ -1,3 +1,10 @@
+# [1.0.0-dev.16](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.15...v1.0.0-dev.16) (2026-04-04)
+
+
+### Features
+
+* **tools:** add component and beforeCommit filters to clear_renders ([#35](https://github.com/0x1f320/why-did-you-render-mcp/issues/35)) ([0244223](https://github.com/0x1f320/why-did-you-render-mcp/commit/02442230fb153e51b5d4169dd4a27da2d9cd2a2e))
+
 # [1.0.0-dev.15](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.14...v1.0.0-dev.15) (2026-04-04)
 
 
