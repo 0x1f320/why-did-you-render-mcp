@@ -13,7 +13,7 @@ export default defineConfig([
   },
   {
     entry: { "client/index": "src/client/index.ts" },
-    format: "esm",
+    format: ["esm", "cjs"],
     platform: "browser",
     outDir: "dist",
     dts: true,

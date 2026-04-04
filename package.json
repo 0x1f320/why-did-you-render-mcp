@@ -14,7 +14,10 @@
   },
   "exports": {
     ".": "./dist/server/index.js",
-    "./client": "./dist/client/index.js"
+    "./client": {
+      "import": "./dist/client/index.js",
+      "require": "./dist/client/index.cjs"
+    }
   },
   "files": ["dist"],
   "scripts": {
