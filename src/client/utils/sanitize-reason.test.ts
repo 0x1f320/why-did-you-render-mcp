@@ -29,8 +29,8 @@ describe("sanitizeReason", () => {
       {
         pathString: "onClick",
         diffType: "function",
-        prevValue: "function old",
-        nextValue: "function next",
+        prevValue: { type: "function", name: "old" },
+        nextValue: { type: "function", name: "next" },
       },
     ])
     expect(result.stateDifferences).toBe(false)
@@ -38,8 +38,8 @@ describe("sanitizeReason", () => {
       {
         pathString: "",
         diffType: "deepEquals",
-        prevValue: "Object",
-        nextValue: "Object",
+        prevValue: { a: 1 },
+        nextValue: { a: 2 },
       },
     ])
   })
