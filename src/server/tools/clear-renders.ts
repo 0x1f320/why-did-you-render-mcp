@@ -10,7 +10,7 @@ export function register(server: McpServer): void {
     {
       title: "Clear Renders",
       description:
-        "Clears collected render data. If multiple projects are active and no project is specified, the tool will ask you to disambiguate.",
+        "Clears collected render data. Supports filtering by component name or by commit ID threshold. When no filter is given, clears all data. If multiple projects are active and no project is specified, the tool will ask you to disambiguate.",
       inputSchema: {
         project: z
           .string()
@@ -18,11 +18,41 @@ export function register(server: McpServer): void {
           .describe(
             "Project identifier (the browser's origin URL, e.g. http://localhost:3000). Omit to auto-detect.",
           ),
+        component: z
+          .string()
+          .optional()
+          .describe("Clear only renders for this component (by displayName)."),
+        beforeCommit: z
+          .number()
+          .optional()
+          .describe(
+            "Clear all renders from commits with an ID strictly less than this value.",
+          ),
       },
     },
-    async ({ project }) => {
+    async ({ project, component, beforeCommit }) => {
       const resolved = resolveProject(project)
       if (resolved.error) return textResult(resolved.error)
+
+      if (component) {
+        const removed = store.clearRendersByComponent(
+          component,
+          resolved.projectId,
+        )
+        return textResult(
+          `Cleared ${removed} render(s) for component "${component}".`,
+        )
+      }
+
+      if (beforeCommit != null) {
+        const deleted = store.clearRendersByCommit(
+          beforeCommit,
+          resolved.projectId,
+        )
+        return textResult(
+          `Cleared renders from ${deleted} commit file(s) before commit #${beforeCommit}.`,
+        )
+      }
 
       store.clearRenders(resolved.projectId)
       return textResult(
