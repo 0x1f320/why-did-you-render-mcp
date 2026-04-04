@@ -34,6 +34,7 @@ export class RenderStore {
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly dicts = new Map<string, ValueDict>()
   private readonly bufferMeta = new Map<string, BufferMeta>()
+  private readonly trackedComponents = new Map<string, string[]>()
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -274,6 +275,28 @@ export class RenderStore {
     }
 
     return summary
+  }
+
+  setTrackedComponents(components: string[], projectId: string): void {
+    this.trackedComponents.set(projectId, components)
+  }
+
+  getTrackedComponents(
+    projectId?: string,
+  ): Record<string, { registered: string[]; observed: string[] }> {
+    const result: Record<string, { registered: string[]; observed: string[] }> =
+      {}
+
+    const projects = projectId ? [projectId] : this.getProjects()
+    for (const proj of projects) {
+      const observed = [
+        ...new Set(this.getAllRenders(proj).map((r) => r.displayName)),
+      ]
+      const registered = this.trackedComponents.get(proj) ?? []
+      result[proj] = { registered, observed }
+    }
+
+    return result
   }
 
   private bufferKey(projectId: string, commitId?: number): string {

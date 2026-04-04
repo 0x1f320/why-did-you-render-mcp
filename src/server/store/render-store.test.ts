@@ -188,6 +188,56 @@ describe("RenderStore", () => {
     expect(renders).toHaveLength(2)
   })
 
+  describe("tracked components", () => {
+    it("returns observed components from render data", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("Header"), "http://localhost:3000")
+      store.addRender(makeReport("App"), "http://localhost:3000")
+
+      const tracked = store.getTrackedComponents("http://localhost:3000")
+      expect(tracked["http://localhost:3000"].observed).toEqual([
+        "App",
+        "Header",
+      ])
+      expect(tracked["http://localhost:3000"].registered).toEqual([])
+    })
+
+    it("returns registered components after setTrackedComponents", () => {
+      store.setTrackedComponents(
+        ["App", "Header", "Footer"],
+        "http://localhost:3000",
+      )
+
+      const tracked = store.getTrackedComponents("http://localhost:3000")
+      expect(tracked["http://localhost:3000"].registered).toEqual([
+        "App",
+        "Header",
+        "Footer",
+      ])
+    })
+
+    it("returns correct data per project", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("Dashboard"), "http://localhost:5173")
+      store.setTrackedComponents(["App", "Header"], "http://localhost:3000")
+      store.setTrackedComponents(["Dashboard"], "http://localhost:5173")
+
+      const tracked = store.getTrackedComponents()
+      expect(tracked["http://localhost:3000"].registered).toEqual([
+        "App",
+        "Header",
+      ])
+      expect(tracked["http://localhost:3000"].observed).toEqual(["App"])
+      expect(tracked["http://localhost:5173"].registered).toEqual(["Dashboard"])
+      expect(tracked["http://localhost:5173"].observed).toEqual(["Dashboard"])
+    })
+
+    it("returns empty result when no data exists", () => {
+      const tracked = store.getTrackedComponents()
+      expect(tracked).toEqual({})
+    })
+  })
+
   describe("value dictionary deduplication", () => {
     const objectReason: SafeReasonForUpdate = {
       propsDifferences: [

@@ -91,3 +91,8 @@ export type WsMessage =
       projectId?: string
       commitId?: number
     }
+  | {
+      type: "register"
+      components: string[]
+      projectId?: string
+    }

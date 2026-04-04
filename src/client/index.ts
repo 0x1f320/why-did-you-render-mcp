@@ -114,6 +114,13 @@ export function buildOptions(opts?: ClientOptions) {
   }
 
   return {
+    registerComponents(components: string[]) {
+      send({
+        type: "register",
+        projectId,
+        components,
+      })
+    },
     notifier(info: UpdateInfo) {
       const report: RenderReport = {
         displayName: info.displayName,
