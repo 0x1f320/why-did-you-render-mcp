@@ -145,4 +145,54 @@ describe("describeValue", () => {
   it("converts symbol to string", () => {
     expect(describeValue(Symbol("id"))).toBe("Symbol(id)")
   })
+
+  it("handles mixed special values inside arrays", () => {
+    function fn() {}
+    expect(describeValue([1, undefined, fn, Number.NaN, null])).toEqual([
+      1,
+      null,
+      { type: "function", name: "fn" },
+      "NaN",
+      null,
+    ])
+  })
+
+  it("handles special values inside objects", () => {
+    expect(
+      describeValue({ a: Number.POSITIVE_INFINITY, b: undefined, c: -0 }),
+    ).toEqual({ a: "Infinity", b: null, c: "-0" })
+  })
+
+  it("handles nested arrays", () => {
+    expect(describeValue([[1, 2], [3]])).toEqual([[1, 2], [3]])
+  })
+
+  it("handles non-serializable values inside Map", () => {
+    const m = new Map<string, unknown>([
+      ["fn", () => {}],
+      ["val", 42],
+    ])
+    const result = describeValue(m) as Record<string, unknown>
+    expect(result).toEqual({
+      type: "Map",
+      entries: {
+        fn: { type: "function", name: "anonymous" },
+        val: 42,
+      },
+    })
+  })
+
+  it("handles non-serializable values inside Set", () => {
+    function foo() {}
+    const s = new Set([1, foo, undefined])
+    expect(describeValue(s)).toEqual({
+      type: "Set",
+      values: [1, { type: "function", name: "foo" }, null],
+    })
+  })
+
+  it("handles empty string and empty object", () => {
+    expect(describeValue("")).toBe("")
+    expect(describeValue({})).toEqual({})
+  })
 })
