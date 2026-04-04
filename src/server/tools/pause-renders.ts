@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { getIo } from "../io.js"
+import { relayPause } from "../relay-client.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
 
@@ -25,9 +26,12 @@ export function register(server: McpServer): void {
       if (resolved.error) return textResult(resolved.error)
 
       const io = getIo()
+
       if (!io) {
+        relayPause(resolved.projectId ?? undefined)
+        const target = resolved.projectId ?? "all projects"
         return textResult(
-          "WebSocket server is not running. Another MCP instance owns the WS server.",
+          `Paused render collection for ${target} (relayed via WS owner).`,
         )
       }
 

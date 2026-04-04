@@ -111,6 +111,8 @@ export interface ClientToServerEvents {
   ) => void
   register: (components: string[], projectId: string) => void
   config: (config: WdyrConfig, projectId: string) => void
+  "relay-pause": (projectId?: string) => void
+  "relay-resume": (projectId?: string) => void
 }
 
 export interface ServerToClientEvents {
