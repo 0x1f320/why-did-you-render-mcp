@@ -128,4 +128,62 @@ describe("RenderStore", () => {
     const summary = store.getSummary("http://localhost:3000")
     expect(Object.keys(summary)).toEqual(["http://localhost:3000"])
   })
+
+  it("stores and retrieves commitId", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000", 1)
+    store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+    store.addRender(makeReport("App"), "http://localhost:3000", 2)
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    expect(renders[0].commitId).toBe(1)
+    expect(renders[1].commitId).toBe(1)
+    expect(renders[2].commitId).toBe(2)
+  })
+
+  it("returns unique commit IDs", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000", 1)
+    store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+    store.addRender(makeReport("App"), "http://localhost:3000", 2)
+    store.addRender(makeReport("Footer"), "http://localhost:3000", 3)
+
+    const commitIds = store.getCommitIds("http://localhost:3000")
+    expect(commitIds).toEqual([1, 2, 3])
+  })
+
+  it("returns empty commit IDs when no renders exist", () => {
+    expect(store.getCommitIds("http://localhost:3000")).toEqual([])
+  })
+
+  it("excludes renders without commitId from getCommitIds", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000")
+    store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+
+    const commitIds = store.getCommitIds("http://localhost:3000")
+    expect(commitIds).toEqual([1])
+  })
+
+  it("filters renders by commit ID", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000", 1)
+    store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+    store.addRender(makeReport("Footer"), "http://localhost:3000", 2)
+
+    const renders = store.getRendersByCommit(1, "http://localhost:3000")
+    expect(renders).toHaveLength(2)
+    expect(renders[0].displayName).toBe("App")
+    expect(renders[1].displayName).toBe("Header")
+  })
+
+  it("returns empty array for non-existent commit ID", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000", 1)
+
+    expect(store.getRendersByCommit(99, "http://localhost:3000")).toEqual([])
+  })
+
+  it("filters renders by commit ID across projects", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000", 1)
+    store.addRender(makeReport("Dashboard"), "http://localhost:5173", 1)
+
+    const renders = store.getRendersByCommit(1)
+    expect(renders).toHaveLength(2)
+  })
 })
