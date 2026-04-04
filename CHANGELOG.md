@@ -1,3 +1,10 @@
+# [1.0.0-dev.15](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.14...v1.0.0-dev.15) (2026-04-04)
+
+
+### Features
+
+* **tools:** add reason breakdown to render summary ([#34](https://github.com/0x1f320/why-did-you-render-mcp/issues/34)) ([34e6790](https://github.com/0x1f320/why-did-you-render-mcp/commit/34e679005256ac93aae8440efa0691768cb75a2b))
+
 # [1.0.0-dev.14](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.13...v1.0.0-dev.14) (2026-04-04)
 
 
