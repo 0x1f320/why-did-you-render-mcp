@@ -13,6 +13,10 @@ export function register(server: McpServer): void {
         "Returns all unnecessary re-renders for a specific React commit ID. Use get_commits first to discover available commit IDs.",
       inputSchema: {
         commitId: z.number().describe("The React commit ID to filter by."),
+        component: z
+          .string()
+          .optional()
+          .describe("Filter by component name. Omit to get all renders."),
         project: z
           .string()
           .optional()
@@ -21,14 +25,22 @@ export function register(server: McpServer): void {
           ),
       },
     },
-    async ({ commitId, project }) => {
+    async ({ commitId, component, project }) => {
       const resolved = resolveProject(project)
       if (resolved.error) return textResult(resolved.error)
 
-      const renders = store.getRendersByCommit(commitId, resolved.projectId)
+      let renders = store.getRendersByCommit(commitId, resolved.projectId)
+
+      if (component) {
+        renders = renders.filter((r) => r.displayName === component)
+      }
 
       if (renders.length === 0) {
-        return textResult(`No renders recorded for commit ${commitId}.`)
+        return textResult(
+          component
+            ? `No renders recorded for component "${component}" in commit ${commitId}.`
+            : `No renders recorded for commit ${commitId}.`,
+        )
       }
 
       return textResult(JSON.stringify(renders, null, 2))
