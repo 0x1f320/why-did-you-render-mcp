@@ -1,6 +1,36 @@
-import type { UpdateInfo, WsMessage } from "../types.js";
+import type { UpdateInfo, WsMessage, SafeReasonForUpdate, SafeHookDifference } from "../types.js";
 
 const DEFAULT_WS_URL = "ws://localhost:4649";
+
+function describeValue(value: unknown): string {
+	if (value === null) return "null";
+	if (value === undefined) return "undefined";
+	if (typeof value === "function") return `function ${value.name || "anonymous"}`;
+	if (typeof value !== "object") return String(value);
+	if (Array.isArray(value)) return `Array(${value.length})`;
+	const proto = Object.getPrototypeOf(value);
+	const name = proto?.constructor?.name;
+	if (name && name !== "Object") return name;
+	return "Object";
+}
+
+function sanitizeDifferences(diffs: unknown): SafeHookDifference[] | false {
+	if (!Array.isArray(diffs)) return false;
+	return diffs.map((diff) => ({
+		pathString: diff.pathString,
+		diffType: diff.diffType,
+		prevValue: describeValue(diff.prevValue),
+		nextValue: describeValue(diff.nextValue),
+	}));
+}
+
+function sanitizeReason(reason: UpdateInfo["reason"]): SafeReasonForUpdate {
+	return {
+		propsDifferences: sanitizeDifferences(reason.propsDifferences),
+		stateDifferences: sanitizeDifferences(reason.stateDifferences),
+		hookDifferences: sanitizeDifferences(reason.hookDifferences),
+	};
+}
 
 export interface ClientOptions {
 	wsUrl?: string;
@@ -51,7 +81,7 @@ export function buildOptions(opts?: ClientOptions) {
 				projectId,
 				payload: {
 					displayName: info.displayName,
-					reason: info.reason,
+					reason: sanitizeReason(info.reason),
 					hookName: info.hookName,
 				},
 			});
