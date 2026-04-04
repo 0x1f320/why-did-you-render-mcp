@@ -210,7 +210,7 @@ describe("RenderStore", () => {
       store.addRender(makeObjectReport("App"), "http://localhost:3000")
       store.flush()
 
-      const file = join(testDir, "http___localhost_3000.jsonl")
+      const file = join(testDir, "http___localhost_3000_nocommit.jsonl")
       const lines = readFileSync(file, "utf-8").split("\n").filter(Boolean)
 
       const dictLine = JSON.parse(lines[0])
@@ -245,7 +245,7 @@ describe("RenderStore", () => {
       store.addRender(makeObjectReport("Header"), "http://localhost:3000")
       store.flush()
 
-      const file = join(testDir, "http___localhost_3000.jsonl")
+      const file = join(testDir, "http___localhost_3000_nocommit.jsonl")
       const lines = readFileSync(file, "utf-8").split("\n").filter(Boolean)
 
       // 1 dict line + 2 render lines
@@ -260,7 +260,7 @@ describe("RenderStore", () => {
       store.addRender(makeReport("App"), "http://localhost:3000")
       store.flush()
 
-      const file = join(testDir, "http___localhost_3000.jsonl")
+      const file = join(testDir, "http___localhost_3000_nocommit.jsonl")
       const raw = readFileSync(file, "utf-8")
       // no dict line needed for primitive-only values
       expect(raw).not.toContain(DICT_KEY)
