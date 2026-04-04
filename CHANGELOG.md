@@ -1,3 +1,10 @@
+# [1.1.0-dev.2](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.1...v1.1.0-dev.2) (2026-04-04)
+
+
+### Features
+
+* relay pause/resume commands from non-owner MCP instances ([#48](https://github.com/0x1f320/why-did-you-render-mcp/issues/48)) ([3054df2](https://github.com/0x1f320/why-did-you-render-mcp/commit/3054df26b8947936294504153d567be987f11a4d))
+
 # [1.1.0-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.1-dev.1...v1.1.0-dev.1) (2026-04-04)
 
 
