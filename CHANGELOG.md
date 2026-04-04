@@ -1,3 +1,10 @@
+# [1.0.0-dev.12](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.11...v1.0.0-dev.12) (2026-04-04)
+
+
+### Bug Fixes
+
+* **release:** reformat package.json after semantic-release version bump ([#30](https://github.com/0x1f320/why-did-you-render-mcp/issues/30)) ([6583358](https://github.com/0x1f320/why-did-you-render-mcp/commit/65833582a02a50efb4bfa292dba4c0901ee21840))
+
 # [1.0.0-dev.11](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.10...v1.0.0-dev.11) (2026-04-04)
 
 # [1.0.0-dev.10](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.9...v1.0.0-dev.10) (2026-04-04)
