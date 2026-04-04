@@ -94,10 +94,19 @@ Once both the MCP server and your React dev server are running, interact with yo
 | --- | --- |
 | `get_unnecessary_renders` | Returns all captured unnecessary re-renders. Optionally filter by `component` name. |
 | `get_render_summary` | Returns a summary of re-renders grouped by component with counts. |
+| `get_commits` | Lists React commit IDs that have recorded render data. Use these IDs with `get_renders_by_commit`. |
+| `get_renders_by_commit` | Returns all unnecessary re-renders for a specific React commit ID. |
 | `get_projects` | Lists all active projects (identified by their origin URL). |
 | `clear_renders` | Clears all stored render data. Optionally scope to a specific project. |
 
 When multiple projects are active, tools accept an optional `project` parameter (the browser's origin URL, e.g. `http://localhost:3000`). If omitted and only one project exists, it is auto-selected.
+
+### Commit-level grouping
+
+Each render report is tagged with a React **commit ID**, allowing agents to inspect which components re-rendered together in the same commit. The client tracks commits by hooking into `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot`, which React calls synchronously once per commit. A typical workflow:
+
+1. Call `get_commits` to list available commit IDs
+2. Call `get_renders_by_commit` with a specific ID to see all renders in that commit
 
 ## Architecture
 

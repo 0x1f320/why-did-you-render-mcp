@@ -45,4 +45,25 @@ describe("toResult", () => {
 
     expect(toResult(stored)).not.toHaveProperty("hookName")
   })
+
+  it("includes commitId when present", () => {
+    const stored: StoredRender = {
+      projectId: "http://localhost:3000",
+      displayName: "App",
+      reason: baseReason,
+      commitId: 5,
+    }
+
+    expect(toResult(stored).commitId).toBe(5)
+  })
+
+  it("omits commitId when not present", () => {
+    const stored: StoredRender = {
+      projectId: "http://localhost:3000",
+      displayName: "App",
+      reason: baseReason,
+    }
+
+    expect(toResult(stored)).not.toHaveProperty("commitId")
+  })
 })

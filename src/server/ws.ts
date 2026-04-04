@@ -33,7 +33,7 @@ export function createWsServer(port: number): WebSocketServer | null {
         if (msg.type === "render") {
           const projectId = msg.projectId ?? "default"
           heartbeat.setProjectId(ws, projectId)
-          store.addRender(msg.payload, projectId)
+          store.addRender(msg.payload, projectId, msg.commitId)
         }
       } catch {
         console.error("[wdyr-mcp] invalid message received")

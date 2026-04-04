@@ -26,8 +26,12 @@ export class RenderStore {
     mkdirSync(this.dir, { recursive: true })
   }
 
-  addRender(report: RenderReport, projectId: string): void {
-    const stored: StoredRender = { ...report, projectId }
+  addRender(report: RenderReport, projectId: string, commitId?: number): void {
+    const stored: StoredRender = {
+      ...report,
+      projectId,
+      ...(commitId != null && { commitId }),
+    }
 
     let buf = this.buffers.get(projectId)
     if (!buf) {
@@ -125,6 +129,22 @@ export class RenderStore {
     }
 
     return [...projects]
+  }
+
+  getCommitIds(projectId?: string): number[] {
+    const renders = this.getAllRenders(projectId)
+    return [
+      ...new Set(
+        renders.map((r) => r.commitId).filter((id): id is number => id != null),
+      ),
+    ]
+  }
+
+  getRendersByCommit(
+    commitId: number,
+    projectId?: string,
+  ): RenderWithProject[] {
+    return this.getAllRenders(projectId).filter((r) => r.commitId === commitId)
   }
 
   getSummary(projectId?: string): Record<string, Record<string, number>> {
