@@ -25,4 +25,5 @@ export type WsMessage = {
   type: "render"
   payload: RenderReport
   projectId?: string
+  commitId?: number
 }

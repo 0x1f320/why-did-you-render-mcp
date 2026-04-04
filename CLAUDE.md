@@ -23,11 +23,11 @@ Browser (project-b) ──┤
 
 ### Components
 
-- **Client** (`src/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket. Auto-tags messages with `location.origin` as the project identifier.
+- **Client** (`src/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket. Auto-tags messages with `location.origin` as the project identifier. Patches `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot` to track React commit IDs, enabling per-commit grouping of renders.
 - **Server** (`src/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, persists render reports to JSONL files, and exposes them via MCP tools over stdio.
   - `ws.ts` — WebSocket server with EADDRINUSE graceful handling.
   - `store/` — `RenderStore` class backed by JSONL files in `~/.wdyr-mcp/renders/`.
-  - `tools/` — One file per MCP tool: `get-unnecessary-renders`, `get-render-summary`, `get-projects`, `clear-renders`.
+  - `tools/` — One file per MCP tool: `get-unnecessary-renders`, `get-render-summary`, `get-commits`, `get-renders-by-commit`, `get-projects`, `clear-renders`.
 - **Types** (`src/types.ts`) — Shared type definitions including `RenderReport`, `SafeReasonForUpdate`, and `WsMessage`.
 
 ### Design Decisions
@@ -36,6 +36,7 @@ Browser (project-b) ──┤
 - **No daemon process** — Instead of a separate long-running daemon managing shared state, each MCP instance is independent. The WS server is opportunistically claimed by whichever instance starts first; data sharing happens through the filesystem.
 - **Project ID from `location.origin`** — The browser's origin is used as the project identifier because it's auto-available (zero config for the user) and unique per dev server. The MCP server doesn't need to know the project ID upfront — tools query the JSONL store and disambiguate as needed.
 - **One file per function** — Tools and utilities are split into individual files (`tools/<tool-name>.ts`, `store/utils/<fn-name>.ts`) for clarity. Each file has a single responsibility.
+- **Commit ID via DevTools hook** — React calls `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot` once per commit, synchronously. The client patches this hook to increment a counter, and WDYR's notifier (called during render phase) reads the current counter value. Since React guarantees `commitRoot → next renderRoot` ordering, renders within the same commit share the same ID. If the hook doesn't exist at init time, the client creates a minimal stub so React will call into it.
 
 ## Tech Stack
 
@@ -75,6 +76,8 @@ src/
 │       ├── index.ts                # registerTools barrel
 │       ├── get-unnecessary-renders.ts
 │       ├── get-render-summary.ts
+│       ├── get-commits.ts
+│       ├── get-renders-by-commit.ts
 │       ├── get-projects.ts
 │       ├── clear-renders.ts
 │       └── utils/

@@ -28,7 +28,7 @@ export function createWsServer(port: number): WebSocketServer | null {
       try {
         const msg: WsMessage = JSON.parse(String(raw))
         if (msg.type === "render") {
-          store.addRender(msg.payload, msg.projectId ?? "default")
+          store.addRender(msg.payload, msg.projectId ?? "default", msg.commitId)
         }
       } catch {
         console.error("[wdyr-mcp] invalid message received")
