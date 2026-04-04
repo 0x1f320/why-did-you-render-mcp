@@ -1,9 +1,11 @@
+import type { WhyDidYouRenderOptions } from "@welldone-software/why-did-you-render"
 import { type Socket, io } from "socket.io-client"
 import type {
   ClientToServerEvents,
   RenderReport,
   ServerToClientEvents,
   UpdateInfo,
+  WdyrConfig,
 } from "../types.js"
 import { sanitizeReason } from "./utils/sanitize-reason.js"
 
@@ -27,7 +29,7 @@ function log(message: string) {
   console.log(`%c[WDYR MCP]%c ${message}`, PREFIX_STYLE, RESET_STYLE)
 }
 
-export interface ClientOptions {
+export interface ClientOptions extends WhyDidYouRenderOptions {
   wsUrl?: string
   projectId?: string
 }
@@ -50,9 +52,31 @@ function patchDevToolsHook(onCommit: () => void): void {
   }
 }
 
-export function buildOptions(opts?: ClientOptions) {
-  const url = opts?.wsUrl ?? DEFAULT_URL
-  const projectId = opts?.projectId ?? globalThis.location?.origin ?? "default"
+function serializeConfig(opts: ClientOptions): WdyrConfig {
+  const config: WdyrConfig = {}
+  if (opts.include) config.include = opts.include.map((r) => r.source)
+  if (opts.exclude) config.exclude = opts.exclude.map((r) => r.source)
+  if (opts.trackAllPureComponents != null)
+    config.trackAllPureComponents = opts.trackAllPureComponents
+  if (opts.trackHooks != null) config.trackHooks = opts.trackHooks
+  if (opts.trackExtraHooks)
+    config.trackExtraHooks = opts.trackExtraHooks.map(([, name]) => name)
+  if (opts.logOnDifferentValues != null)
+    config.logOnDifferentValues = opts.logOnDifferentValues
+  if (opts.logOwnerReasons != null)
+    config.logOwnerReasons = opts.logOwnerReasons
+  return config
+}
+
+export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
+  const {
+    wsUrl: _wsUrl,
+    projectId: _projectId,
+    notifier: userNotifier,
+    ...wdyrOpts
+  } = opts ?? {}
+  const url = _wsUrl ?? DEFAULT_URL
+  const projectId = _projectId ?? globalThis.location?.origin ?? "default"
 
   let commitId = 0
 
@@ -69,6 +93,10 @@ export function buildOptions(opts?: ClientOptions) {
 
   socket.on("connect", () => {
     log(`Connected to ${url}`)
+
+    if (opts) {
+      socket.emit("config", serializeConfig(opts), projectId)
+    }
   })
 
   socket.on("disconnect", () => {
@@ -92,9 +120,7 @@ export function buildOptions(opts?: ClientOptions) {
   }
 
   return {
-    registerComponents(components: string[]) {
-      socket.emit("register", components, projectId)
-    },
+    ...wdyrOpts,
     notifier(info: UpdateInfo) {
       const report: RenderReport = {
         displayName: info.displayName,
@@ -112,6 +138,10 @@ export function buildOptions(opts?: ClientOptions) {
       if (!flushScheduled) {
         flushScheduled = true
         queueMicrotask(flushBatch)
+      }
+
+      if (userNotifier) {
+        userNotifier(info)
       }
     },
   }

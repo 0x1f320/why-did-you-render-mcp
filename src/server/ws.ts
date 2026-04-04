@@ -42,6 +42,11 @@ export function createWsServer(port: number): Server | null {
       store.setTrackedComponents(components, projectId)
     })
 
+    socket.on("config", (config, projectId) => {
+      socket.data.projectId = projectId
+      store.setWdyrConfig(config, projectId)
+    })
+
     socket.on("disconnect", () => {
       console.error("[wdyr-mcp] browser disconnected")
       const projectId = socket.data.projectId

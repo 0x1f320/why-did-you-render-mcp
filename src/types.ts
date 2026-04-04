@@ -78,6 +78,16 @@ export interface RenderReport {
   hookName?: string
 }
 
+export interface WdyrConfig {
+  include?: string[]
+  exclude?: string[]
+  trackAllPureComponents?: boolean
+  trackHooks?: boolean
+  trackExtraHooks?: string[]
+  logOnDifferentValues?: boolean
+  logOwnerReasons?: boolean
+}
+
 // socket.io typed event contract — shared between client and server
 
 export interface ClientToServerEvents {
@@ -88,6 +98,7 @@ export interface ClientToServerEvents {
     commitId?: number,
   ) => void
   register: (components: string[], projectId: string) => void
+  config: (config: WdyrConfig, projectId: string) => void
 }
 
 // biome-ignore lint/complexity/noBannedTypes: socket.io requires explicit empty interface for unused event maps
