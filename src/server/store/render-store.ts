@@ -259,6 +259,23 @@ export class RenderStore {
     return summary
   }
 
+  getSummaryByCommit(
+    projectId?: string,
+  ): Record<string, Record<number, Record<string, number>>> {
+    const renders = this.getAllRenders(projectId)
+    const summary: Record<string, Record<number, Record<string, number>>> = {}
+
+    for (const r of renders) {
+      if (r.commitId == null) continue
+      summary[r.project] ??= {}
+      summary[r.project][r.commitId] ??= {}
+      const commit = summary[r.project][r.commitId]
+      commit[r.displayName] = (commit[r.displayName] ?? 0) + 1
+    }
+
+    return summary
+  }
+
   private bufferKey(projectId: string, commitId?: number): string {
     return `${projectId}\0${commitId ?? NOCOMMIT}`
   }
