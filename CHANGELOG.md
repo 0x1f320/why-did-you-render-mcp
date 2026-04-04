@@ -1,3 +1,10 @@
+# [1.0.0-dev.20](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.19...v1.0.0-dev.20) (2026-04-04)
+
+
+### Features
+
+* parse notifier stack trace to extract hook chain and component tree ([#40](https://github.com/0x1f320/why-did-you-render-mcp/issues/40)) ([9e7f2e7](https://github.com/0x1f320/why-did-you-render-mcp/commit/9e7f2e70746fc5a85ef6e6d09696520a9b7af921))
+
 # [1.0.0-dev.19](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.18...v1.0.0-dev.19) (2026-04-04)
 
 
