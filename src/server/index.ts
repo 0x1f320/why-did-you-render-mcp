@@ -14,11 +14,25 @@ registerTools(server)
 
 async function main() {
   const port = Number(process.env.WDYR_WS_PORT) || DEFAULT_WS_PORT
-  createWsServer(port)
+  const wss = createWsServer(port)
 
   const transport = new StdioServerTransport()
   await server.connect(transport)
   console.error("[wdyr-mcp] MCP server running on stdio")
+
+  let shuttingDown = false
+  async function shutdown() {
+    if (shuttingDown) return
+    shuttingDown = true
+    console.error("[wdyr-mcp] Shutting down…")
+    wss?.close()
+    await server.close()
+    process.exit(0)
+  }
+
+  process.stdin.on("end", shutdown)
+  process.on("SIGTERM", shutdown)
+  process.on("SIGINT", shutdown)
 }
 
 main().catch((error) => {
