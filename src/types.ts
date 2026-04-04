@@ -72,10 +72,22 @@ export interface SafeReasonForUpdate {
   hookDifferences: SafeHookDifference[] | false
 }
 
+export interface StackFrameLocation {
+  path: string
+  line: number
+}
+
+export interface StackFrame {
+  type: "hook" | "component"
+  name: string
+  location: StackFrameLocation
+}
+
 export interface RenderReport {
   displayName: string
   reason: SafeReasonForUpdate
   hookName?: string
+  stackFrames?: StackFrame[]
 }
 
 export interface WdyrConfig {
