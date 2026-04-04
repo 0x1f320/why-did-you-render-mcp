@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
+import { setIo } from "./io.js"
 import { registerTools } from "./tools/index.js"
 import { createWsServer } from "./ws.js"
 
@@ -15,6 +16,7 @@ registerTools(server)
 async function main() {
   const port = Number(process.env.WDYR_WS_PORT) || DEFAULT_WS_PORT
   const io = createWsServer(port)
+  setIo(io)
 
   const transport = new StdioServerTransport()
   await server.connect(transport)

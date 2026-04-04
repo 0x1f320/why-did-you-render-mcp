@@ -6,12 +6,13 @@ import type {
   ServerToClientEvents,
   SocketData,
 } from "../types.js"
+import type { IoServer } from "./io.js"
 import { store } from "./store/index.js"
 
-export function createWsServer(port: number): Server | null {
+export function createWsServer(port: number): IoServer | null {
   const httpServer = http.createServer()
 
-  const io = new Server<
+  const io: IoServer = new Server<
     ClientToServerEvents,
     ServerToClientEvents,
     InterServerEvents,

@@ -113,8 +113,10 @@ export interface ClientToServerEvents {
   config: (config: WdyrConfig, projectId: string) => void
 }
 
-// biome-ignore lint/complexity/noBannedTypes: socket.io requires explicit empty interface for unused event maps
-export type ServerToClientEvents = {}
+export interface ServerToClientEvents {
+  pause: () => void
+  resume: () => void
+}
 
 // biome-ignore lint/complexity/noBannedTypes: socket.io requires explicit empty interface for unused event maps
 export type InterServerEvents = {}

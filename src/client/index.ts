@@ -92,6 +92,8 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
     transports: ["websocket"],
   })
 
+  let paused = false
+
   socket.on("connect", () => {
     log(`Connected to ${url}`)
 
@@ -102,6 +104,16 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
 
   socket.on("disconnect", () => {
     log("Disconnected, reconnecting...")
+  })
+
+  socket.on("pause", () => {
+    paused = true
+    log("Render collection paused")
+  })
+
+  socket.on("resume", () => {
+    paused = false
+    log("Render collection resumed")
   })
 
   interface PendingItem {
@@ -138,6 +150,11 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
   return {
     ...wdyrOpts,
     notifier(info: UpdateInfo) {
+      if (paused) {
+        if (userNotifier) userNotifier(info)
+        return
+      }
+
       const error = new Error()
 
       if (pendingBatch && pendingBatch.commitId === commitId) {
