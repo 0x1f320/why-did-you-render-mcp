@@ -12,11 +12,11 @@ describe("describeValue", () => {
 
   it("describes named functions", () => {
     function myFunc() {}
-    expect(describeValue(myFunc)).toBe("function myFunc")
+    expect(describeValue(myFunc)).toBe("[Function: myFunc]")
   })
 
   it("describes anonymous functions", () => {
-    expect(describeValue(() => {})).toBe("function anonymous")
+    expect(describeValue(() => {})).toBe("[Function: anonymous]")
   })
 
   it("describes primitives", () => {
@@ -25,23 +25,76 @@ describe("describeValue", () => {
     expect(describeValue(true)).toBe("true")
   })
 
-  it("describes arrays with length", () => {
-    expect(describeValue([1, 2, 3])).toBe("Array(3)")
-    expect(describeValue([])).toBe("Array(0)")
+  it("serializes arrays with contents", () => {
+    expect(describeValue([1, 2, 3])).toBe("[1,2,3]")
+    expect(describeValue([])).toBe("[]")
   })
 
-  it("describes plain objects", () => {
-    expect(describeValue({})).toBe("Object")
+  it("serializes plain objects with properties", () => {
+    expect(describeValue({ a: 1, b: "two" })).toBe('{"a":1,"b":"two"}')
   })
 
-  it("describes class instances by constructor name", () => {
+  it("serializes nested objects", () => {
+    expect(describeValue({ user: { name: "Alice", age: 30 } })).toBe(
+      '{"user":{"name":"Alice","age":30}}',
+    )
+  })
+
+  it("replaces functions inside objects", () => {
+    function handler() {}
+    expect(describeValue({ onClick: handler })).toBe(
+      '{"onClick":"[Function: handler]"}',
+    )
+  })
+
+  it("handles circular references", () => {
+    const obj: Record<string, unknown> = { a: 1 }
+    obj.self = obj
+    expect(describeValue(obj)).toBe('{"a":1,"self":"[Circular]"}')
+  })
+
+  it("respects depth limit", () => {
+    const deep = { l1: { l2: { l3: { l4: { l5: "too deep" } } } } }
+    const result = describeValue(deep)
+    expect(result).toContain("[Object]")
+  })
+
+  it("describes class instances", () => {
     class MyComponent {}
-    expect(describeValue(new MyComponent())).toBe("MyComponent")
+    expect(describeValue(new MyComponent())).toBe('"[MyComponent]"')
   })
 
-  it("describes built-in types", () => {
-    expect(describeValue(new Map())).toBe("Map")
-    expect(describeValue(new Date())).toBe("Date")
-    expect(describeValue(new Set())).toBe("Set")
+  it("describes Date as ISO string", () => {
+    const d = new Date("2024-01-01T00:00:00.000Z")
+    expect(describeValue(d)).toBe('"2024-01-01T00:00:00.000Z"')
+  })
+
+  it("describes Map", () => {
+    const m = new Map([
+      ["a", 1],
+      ["b", 2],
+    ])
+    expect(describeValue(m)).toBe('"Map(2){a => 1, b => 2}"')
+  })
+
+  it("describes Set", () => {
+    const s = new Set([1, 2, 3])
+    expect(describeValue(s)).toBe('"Set(3){1, 2, 3}"')
+  })
+
+  it("describes RegExp", () => {
+    expect(describeValue(/foo/gi)).toBe('"/foo/gi"')
+  })
+
+  it("truncates values exceeding max length", () => {
+    const large = Object.fromEntries(
+      Array.from({ length: 100 }, (_, i) => [
+        `key${i}`,
+        `value-${i}-${"x".repeat(20)}`,
+      ]),
+    )
+    const result = describeValue(large)
+    expect(result.length).toBeLessThanOrEqual(1025) // 1024 + "…"
+    expect(result).toMatch(/…$/)
   })
 })
