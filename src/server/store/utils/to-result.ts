@@ -7,5 +7,6 @@ export function toResult(stored: StoredRender): RenderWithProject {
     reason: stored.reason,
     ...(stored.hookName != null && { hookName: stored.hookName }),
     ...(stored.commitId != null && { commitId: stored.commitId }),
+    ...(stored.timestamp != null && { timestamp: stored.timestamp }),
   }
 }

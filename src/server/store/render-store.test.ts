@@ -219,6 +219,61 @@ describe("RenderStore", () => {
     expect(store.getCommitIds("http://localhost:3000")).toEqual([])
   })
 
+  it("stores timestamp on renders", () => {
+    const before = Date.now()
+    store.addRender(makeReport("App"), "http://localhost:3000", 1)
+    const after = Date.now()
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    expect(renders).toHaveLength(1)
+    expect(renders[0].timestamp).toBeGreaterThanOrEqual(before)
+    expect(renders[0].timestamp).toBeLessThanOrEqual(after)
+  })
+
+  describe("getCommits", () => {
+    it("returns commit info with metadata", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 1)
+      store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+      store.addRender(makeReport("App"), "http://localhost:3000", 2)
+
+      const commits = store.getCommits("http://localhost:3000")
+      expect(commits).toHaveLength(2)
+
+      expect(commits[0].commitId).toBe(1)
+      expect(commits[0].renderCount).toBe(2)
+      expect(commits[0].components).toEqual(
+        expect.arrayContaining(["App", "Header"]),
+      )
+      expect(commits[0].timestamp).toBeTypeOf("number")
+
+      expect(commits[1].commitId).toBe(2)
+      expect(commits[1].renderCount).toBe(1)
+      expect(commits[1].components).toEqual(["App"])
+    })
+
+    it("returns commits sorted by commitId", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 5)
+      store.addRender(makeReport("App"), "http://localhost:3000", 2)
+      store.addRender(makeReport("App"), "http://localhost:3000", 10)
+
+      const commits = store.getCommits("http://localhost:3000")
+      expect(commits.map((c) => c.commitId)).toEqual([2, 5, 10])
+    })
+
+    it("returns empty array when no commits exist", () => {
+      expect(store.getCommits("http://localhost:3000")).toEqual([])
+    })
+
+    it("excludes renders without commitId", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+
+      const commits = store.getCommits("http://localhost:3000")
+      expect(commits).toHaveLength(1)
+      expect(commits[0].commitId).toBe(1)
+    })
+  })
+
   it("excludes renders without commitId from getCommitIds", () => {
     store.addRender(makeReport("App"), "http://localhost:3000")
     store.addRender(makeReport("Header"), "http://localhost:3000", 1)
