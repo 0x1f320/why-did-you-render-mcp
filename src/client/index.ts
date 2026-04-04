@@ -104,40 +104,47 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
     log("Disconnected, reconnecting...")
   })
 
-  let pendingBatch: { commitId: number; reports: RenderReport[] } | null = null
+  interface PendingItem {
+    info: UpdateInfo
+    error: Error
+  }
+
+  let pendingBatch: { commitId: number; items: PendingItem[] } | null = null
   let flushScheduled = false
 
-  function flushBatch() {
+  async function flushBatch() {
     flushScheduled = false
-    if (!pendingBatch || pendingBatch.reports.length === 0) return
+    if (!pendingBatch || pendingBatch.items.length === 0) return
 
-    socket.emit(
-      "render-batch",
-      pendingBatch.reports,
-      projectId,
-      pendingBatch.commitId,
-    )
+    const batch = pendingBatch
     pendingBatch = null
+
+    const reports = await Promise.all(
+      batch.items.map(async ({ info, error }) => {
+        const stackFrames = await parseStack(error)
+        const report: RenderReport = {
+          displayName: info.displayName,
+          reason: sanitizeReason(info.reason),
+          hookName: info.hookName,
+          ...(stackFrames.length > 0 && { stackFrames }),
+        }
+        return report
+      }),
+    )
+
+    socket.emit("render-batch", reports, projectId, batch.commitId)
   }
 
   return {
     ...wdyrOpts,
     notifier(info: UpdateInfo) {
-      console.trace("[WDYR MCP] notifier called")
-      const stackFrames = parseStack(new Error())
-
-      const report: RenderReport = {
-        displayName: info.displayName,
-        reason: sanitizeReason(info.reason),
-        hookName: info.hookName,
-        ...(stackFrames.length > 0 && { stackFrames }),
-      }
+      const error = new Error()
 
       if (pendingBatch && pendingBatch.commitId === commitId) {
-        pendingBatch.reports.push(report)
+        pendingBatch.items.push({ info, error })
       } else {
         if (pendingBatch) flushBatch()
-        pendingBatch = { commitId, reports: [report] }
+        pendingBatch = { commitId, items: [{ info, error }] }
       }
 
       if (!flushScheduled) {
