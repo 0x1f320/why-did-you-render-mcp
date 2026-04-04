@@ -31,6 +31,12 @@
     ],
     "@semantic-release/changelog",
     "@semantic-release/npm",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "pnpm check:fix"
+      }
+    ],
     "@semantic-release/github",
     [
       "@semantic-release/git",
