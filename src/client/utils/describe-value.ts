@@ -57,7 +57,10 @@ function resolveComponentInfo(type: unknown): {
   if (typeof current === "string") {
     name = current
   } else if (typeof current === "function") {
-    name = current.displayName || current.name || "Anonymous"
+    name =
+      (current as { displayName?: string }).displayName ||
+      current.name ||
+      "Anonymous"
   }
 
   return { name, memo, forwardRef }
