@@ -123,6 +123,7 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
   return {
     ...wdyrOpts,
     notifier(info: UpdateInfo) {
+      console.trace("[WDYR MCP] notifier called")
       const stackFrames = parseStack(new Error())
 
       const report: RenderReport = {
