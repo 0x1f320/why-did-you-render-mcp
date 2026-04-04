@@ -2,14 +2,14 @@ import { mkdirSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import type { RenderReport } from "../../types.js"
+import type { RenderReport, SafeReasonForUpdate } from "../../types.js"
 import { RenderStore } from "./render-store.js"
 
 describe("RenderStore", () => {
   const testDir = join(tmpdir(), "wdyr-test-render-store")
   let store: RenderStore
 
-  const reason = {
+  const propsReason = {
     propsDifferences: [
       {
         pathString: "count",
@@ -22,7 +22,57 @@ describe("RenderStore", () => {
     hookDifferences: false as const,
   }
 
-  function makeReport(name: string, hookName?: string): RenderReport {
+  const stateReason = {
+    propsDifferences: false as const,
+    stateDifferences: [
+      {
+        pathString: "value",
+        diffType: "deepEquals",
+        prevValue: "1",
+        nextValue: "2",
+      },
+    ],
+    hookDifferences: false as const,
+  }
+
+  const hooksReason = {
+    propsDifferences: false as const,
+    stateDifferences: false as const,
+    hookDifferences: [
+      {
+        pathString: "",
+        diffType: "deepEquals",
+        prevValue: "1",
+        nextValue: "2",
+      },
+    ],
+  }
+
+  const mixedReason = {
+    propsDifferences: [
+      {
+        pathString: "count",
+        diffType: "deepEquals",
+        prevValue: "1",
+        nextValue: "2",
+      },
+    ],
+    stateDifferences: [
+      {
+        pathString: "value",
+        diffType: "deepEquals",
+        prevValue: "1",
+        nextValue: "2",
+      },
+    ],
+    hookDifferences: false as const,
+  }
+
+  function makeReport(
+    name: string,
+    hookName?: string,
+    reason: SafeReasonForUpdate = propsReason,
+  ): RenderReport {
     return { displayName: name, reason, ...(hookName && { hookName }) }
   }
 
@@ -113,11 +163,20 @@ describe("RenderStore", () => {
 
     const summary = store.getSummary()
     expect(summary["http://localhost:3000"]).toEqual({
-      App: 2,
-      Header: 1,
+      App: {
+        count: 2,
+        reasons: { props: 2, state: 0, hooks: 0 },
+      },
+      Header: {
+        count: 1,
+        reasons: { props: 1, state: 0, hooks: 0 },
+      },
     })
     expect(summary["http://localhost:5173"]).toEqual({
-      Dashboard: 1,
+      Dashboard: {
+        count: 1,
+        reasons: { props: 1, state: 0, hooks: 0 },
+      },
     })
   })
 
@@ -127,5 +186,58 @@ describe("RenderStore", () => {
 
     const summary = store.getSummary("http://localhost:3000")
     expect(Object.keys(summary)).toEqual(["http://localhost:3000"])
+  })
+
+  it("tracks state-only reason in summary", () => {
+    store.addRender(
+      makeReport("Counter", undefined, stateReason),
+      "http://localhost:3000",
+    )
+
+    const summary = store.getSummary()
+    expect(summary["http://localhost:3000"]).toEqual({
+      Counter: {
+        count: 1,
+        reasons: { props: 0, state: 1, hooks: 0 },
+      },
+    })
+  })
+
+  it("tracks hooks-only reason in summary", () => {
+    store.addRender(
+      makeReport("List", undefined, hooksReason),
+      "http://localhost:3000",
+    )
+
+    const summary = store.getSummary()
+    expect(summary["http://localhost:3000"]).toEqual({
+      List: {
+        count: 1,
+        reasons: { props: 0, state: 0, hooks: 1 },
+      },
+    })
+  })
+
+  it("tracks mixed reasons in summary", () => {
+    store.addRender(
+      makeReport("App", undefined, mixedReason),
+      "http://localhost:3000",
+    )
+    store.addRender(
+      makeReport("App", undefined, propsReason),
+      "http://localhost:3000",
+    )
+    store.addRender(
+      makeReport("App", undefined, hooksReason),
+      "http://localhost:3000",
+    )
+
+    const summary = store.getSummary()
+    expect(summary["http://localhost:3000"]).toEqual({
+      App: {
+        count: 3,
+        reasons: { props: 2, state: 1, hooks: 1 },
+      },
+    })
   })
 })

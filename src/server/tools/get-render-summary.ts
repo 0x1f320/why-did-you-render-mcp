@@ -33,8 +33,17 @@ export function register(server: McpServer): void {
       const lines: string[] = []
       for (const [projectId, components] of Object.entries(summary)) {
         lines.push(`[${projectId}]`)
-        for (const [name, count] of Object.entries(components)) {
-          lines.push(`  ${name}: ${count} re-render(s)`)
+        for (const [name, entry] of Object.entries(components)) {
+          const reasonParts: string[] = []
+          if (entry.reasons.props > 0)
+            reasonParts.push(`props: ${entry.reasons.props}`)
+          if (entry.reasons.state > 0)
+            reasonParts.push(`state: ${entry.reasons.state}`)
+          if (entry.reasons.hooks > 0)
+            reasonParts.push(`hooks: ${entry.reasons.hooks}`)
+          const reasonSuffix =
+            reasonParts.length > 0 ? ` — ${reasonParts.join(", ")}` : ""
+          lines.push(`  ${name}: ${entry.count} re-render(s)${reasonSuffix}`)
         }
       }
 

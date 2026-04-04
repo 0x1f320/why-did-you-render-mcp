@@ -14,6 +14,15 @@ import { readJsonl } from "./utils/read-jsonl.js"
 import { sanitizeProjectId } from "./utils/sanitize-project-id.js"
 import { toResult } from "./utils/to-result.js"
 
+export interface ComponentSummary {
+  count: number
+  reasons: {
+    props: number
+    state: number
+    hooks: number
+  }
+}
+
 export class RenderStore {
   private readonly dir: string
 
@@ -70,14 +79,41 @@ export class RenderStore {
     return [...projects]
   }
 
-  getSummary(projectId?: string): Record<string, Record<string, number>> {
+  getSummary(
+    projectId?: string,
+  ): Record<string, Record<string, ComponentSummary>> {
     const renders = this.getAllRenders(projectId)
-    const summary: Record<string, Record<string, number>> = {}
+    const summary: Record<string, Record<string, ComponentSummary>> = {}
 
     for (const r of renders) {
       summary[r.project] ??= {}
       const project = summary[r.project]
-      project[r.displayName] = (project[r.displayName] ?? 0) + 1
+      project[r.displayName] ??= {
+        count: 0,
+        reasons: { props: 0, state: 0, hooks: 0 },
+      }
+      const entry = project[r.displayName]
+      entry.count += 1
+
+      const { reason } = r
+      if (
+        Array.isArray(reason.propsDifferences) &&
+        reason.propsDifferences.length > 0
+      ) {
+        entry.reasons.props += 1
+      }
+      if (
+        Array.isArray(reason.stateDifferences) &&
+        reason.stateDifferences.length > 0
+      ) {
+        entry.reasons.state += 1
+      }
+      if (
+        Array.isArray(reason.hookDifferences) &&
+        reason.hookDifferences.length > 0
+      ) {
+        entry.reasons.hooks += 1
+      }
     }
 
     return summary
