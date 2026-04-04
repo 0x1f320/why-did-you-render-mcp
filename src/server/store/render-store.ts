@@ -9,7 +9,7 @@ import {
 import { homedir } from "node:os"
 import { join } from "node:path"
 import type { RenderReport } from "../../types.js"
-import type { RenderWithProject, StoredRender } from "./types.js"
+import type { BufferMeta, RenderWithProject, StoredRender } from "./types.js"
 import { readJsonl } from "./utils/read-jsonl.js"
 import { sanitizeProjectId } from "./utils/sanitize-project-id.js"
 import { toResult } from "./utils/to-result.js"
@@ -21,12 +21,14 @@ import {
 } from "./utils/value-dict.js"
 
 const FLUSH_DELAY_MS = 200
+const NOCOMMIT = "nocommit"
 
 export class RenderStore {
   private readonly dir: string
   private readonly buffers = new Map<string, StoredRender[]>()
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly dicts = new Map<string, ValueDict>()
+  private readonly bufferMeta = new Map<string, BufferMeta>()
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -40,64 +42,66 @@ export class RenderStore {
       ...(commitId != null && { commitId }),
     }
 
-    let buf = this.buffers.get(projectId)
+    const bk = this.bufferKey(projectId, commitId)
+
+    let buf = this.buffers.get(bk)
     if (!buf) {
       buf = []
-      this.buffers.set(projectId, buf)
+      this.buffers.set(bk, buf)
+      this.bufferMeta.set(bk, { projectId, commitId })
     }
     buf.push(stored)
 
-    const existing = this.timers.get(projectId)
+    const existing = this.timers.get(bk)
     if (existing) clearTimeout(existing)
 
     this.timers.set(
-      projectId,
+      bk,
       setTimeout(() => {
-        this.flushAsync(projectId).catch((err) =>
-          console.error(`[wdyr-mcp] flush error for ${projectId}:`, err),
+        this.flushAsync(projectId, commitId).catch((err) =>
+          console.error(`[wdyr-mcp] flush error for ${bk}:`, err),
         )
       }, FLUSH_DELAY_MS),
     )
   }
 
-  async flushAsync(projectId?: string): Promise<void> {
+  async flushAsync(projectId?: string, commitId?: number): Promise<void> {
     await ensureReady()
-    if (projectId) {
-      this.flushProject(projectId)
+    this.flush(projectId, commitId)
+  }
+
+  flush(projectId?: string, commitId?: number): void {
+    if (projectId != null && commitId !== undefined) {
+      this.flushBuffer(this.bufferKey(projectId, commitId))
+    } else if (projectId != null) {
+      for (const bk of this.bufferKeysForProject(projectId)) {
+        this.flushBuffer(bk)
+      }
     } else {
-      for (const id of this.buffers.keys()) {
-        this.flushProject(id)
+      for (const bk of [...this.buffers.keys()]) {
+        this.flushBuffer(bk)
       }
     }
   }
 
-  flush(projectId?: string): void {
-    if (projectId) {
-      this.flushProject(projectId)
-    } else {
-      for (const id of this.buffers.keys()) {
-        this.flushProject(id)
-      }
-    }
-  }
-
-  private flushProject(projectId: string): void {
-    const buf = this.buffers.get(projectId)
+  private flushBuffer(bk: string): void {
+    const buf = this.buffers.get(bk)
     if (!buf || buf.length === 0) return
 
-    let dict = this.dicts.get(projectId)
+    const meta = this.bufferMeta.get(bk)
+    if (!meta) return
+
+    let dict = this.dicts.get(bk)
     if (!dict) {
       dict = {}
-      this.dicts.set(projectId, dict)
+      this.dicts.set(bk, dict)
     }
 
     const dehydrated = buf.map((r) => dehydrate(r, dict))
 
-    // Read existing data lines (skip old dict line)
-    const file = this.projectFile(projectId)
+    const file = this.commitFile(meta.projectId, meta.commitId)
     const existingLines = this.readDataLines(file)
 
-    // Rewrite: dict line + existing data + new data
     const newLines = dehydrated.map((r) => JSON.stringify(r))
     const allDataLines = [...existingLines, ...newLines]
 
@@ -109,10 +113,10 @@ export class RenderStore {
     writeFileSync(file, `${parts.join("\n")}\n`)
 
     buf.length = 0
-    const timer = this.timers.get(projectId)
+    const timer = this.timers.get(bk)
     if (timer) {
       clearTimeout(timer)
-      this.timers.delete(projectId)
+      this.timers.delete(bk)
     }
   }
 
@@ -131,7 +135,9 @@ export class RenderStore {
     this.flush(projectId)
 
     if (projectId) {
-      return readJsonl(this.projectFile(projectId)).map(toResult)
+      return this.projectFiles(projectId).flatMap((f) =>
+        readJsonl(join(this.dir, f)).map(toResult),
+      )
     }
 
     return this.jsonlFiles().flatMap((f) =>
@@ -150,22 +156,27 @@ export class RenderStore {
 
   clearRenders(projectId?: string): void {
     if (projectId) {
-      this.buffers.delete(projectId)
-      this.dicts.delete(projectId)
-      const timer = this.timers.get(projectId)
-      if (timer) {
-        clearTimeout(timer)
-        this.timers.delete(projectId)
+      for (const bk of this.bufferKeysForProject(projectId)) {
+        this.buffers.delete(bk)
+        this.dicts.delete(bk)
+        this.bufferMeta.delete(bk)
+        const timer = this.timers.get(bk)
+        if (timer) {
+          clearTimeout(timer)
+          this.timers.delete(bk)
+        }
       }
-      const file = this.projectFile(projectId)
-      if (existsSync(file)) unlinkSync(file)
+      for (const f of this.projectFiles(projectId)) {
+        unlinkSync(join(this.dir, f))
+      }
     } else {
-      for (const [id, timer] of this.timers) {
+      for (const [, timer] of this.timers) {
         clearTimeout(timer)
       }
       this.buffers.clear()
       this.timers.clear()
       this.dicts.clear()
+      this.bufferMeta.clear()
       for (const f of this.jsonlFiles()) {
         unlinkSync(join(this.dir, f))
       }
@@ -176,13 +187,19 @@ export class RenderStore {
     this.flush()
     const projects = new Set<string>()
 
+    const seen = new Set<string>()
     for (const f of this.jsonlFiles()) {
+      const parsed = this.parseFilename(f)
+      if (!parsed) continue
+      if (seen.has(parsed.projectSanitized)) continue
+      seen.add(parsed.projectSanitized)
+
       const lines = readFileSync(join(this.dir, f), "utf-8").split("\n")
       for (const line of lines) {
         if (!line) continue
-        const parsed = JSON.parse(line)
-        if (DICT_KEY in parsed) continue
-        projects.add((parsed as StoredRender).projectId)
+        const obj = JSON.parse(line)
+        if (DICT_KEY in obj) continue
+        projects.add((obj as StoredRender).projectId)
         break
       }
     }
@@ -191,19 +208,37 @@ export class RenderStore {
   }
 
   getCommitIds(projectId?: string): number[] {
-    const renders = this.getAllRenders(projectId)
-    return [
-      ...new Set(
-        renders.map((r) => r.commitId).filter((id): id is number => id != null),
-      ),
-    ]
+    this.flush(projectId)
+
+    const files = projectId ? this.projectFiles(projectId) : this.jsonlFiles()
+    const ids = new Set<number>()
+
+    for (const f of files) {
+      const parsed = this.parseFilename(f)
+      if (parsed?.commitId != null) {
+        ids.add(parsed.commitId)
+      }
+    }
+
+    return [...ids].sort((a, b) => a - b)
   }
 
   getRendersByCommit(
     commitId: number,
     projectId?: string,
   ): RenderWithProject[] {
-    return this.getAllRenders(projectId).filter((r) => r.commitId === commitId)
+    if (projectId) {
+      this.flush(projectId, commitId)
+      const file = this.commitFile(projectId, commitId)
+      return readJsonl(file).map(toResult)
+    }
+
+    // No projectId: find all files matching this commitId
+    this.flush()
+    const suffix = `_commit_${commitId}.jsonl`
+    return this.jsonlFiles()
+      .filter((f) => f.endsWith(suffix))
+      .flatMap((f) => readJsonl(join(this.dir, f)).map(toResult))
   }
 
   getSummary(projectId?: string): Record<string, Record<string, number>> {
@@ -219,8 +254,49 @@ export class RenderStore {
     return summary
   }
 
-  private projectFile(projectId: string): string {
-    return join(this.dir, `${sanitizeProjectId(projectId)}.jsonl`)
+  private bufferKey(projectId: string, commitId?: number): string {
+    return `${projectId}\0${commitId ?? NOCOMMIT}`
+  }
+
+  private bufferKeysForProject(projectId: string): string[] {
+    const prefix = `${projectId}\0`
+    return [...this.buffers.keys()].filter((bk) => bk.startsWith(prefix))
+  }
+
+  private commitFile(projectId: string, commitId?: number): string {
+    const sanitized = sanitizeProjectId(projectId)
+    const suffix = commitId != null ? `_commit_${commitId}` : `_${NOCOMMIT}`
+    return join(this.dir, `${sanitized}${suffix}.jsonl`)
+  }
+
+  private projectFiles(projectId: string): string[] {
+    const prefix = sanitizeProjectId(projectId)
+    return readdirSync(this.dir).filter(
+      (f) => f.startsWith(prefix) && f.endsWith(".jsonl"),
+    )
+  }
+
+  private parseFilename(
+    filename: string,
+  ): { projectSanitized: string; commitId?: number } | null {
+    if (!filename.endsWith(".jsonl")) return null
+    const base = filename.slice(0, -".jsonl".length)
+
+    const commitMatch = base.match(/^(.+)_commit_(\d+)$/)
+    if (commitMatch) {
+      return {
+        projectSanitized: commitMatch[1],
+        commitId: Number(commitMatch[2]),
+      }
+    }
+
+    const nocommitMatch = base.match(/^(.+)_nocommit$/)
+    if (nocommitMatch) {
+      return { projectSanitized: nocommitMatch[1] }
+    }
+
+    // Legacy: plain {sanitizedProjectId}.jsonl — treat as nocommit
+    return { projectSanitized: base }
   }
 
   private jsonlFiles(): string[] {

@@ -5,6 +5,8 @@ export interface StoredRender extends RenderReport {
   commitId?: number
 }
 
+export type BufferMeta = Pick<StoredRender, "projectId" | "commitId">
+
 export interface RenderWithProject extends RenderReport {
   project: string
   commitId?: number
