@@ -38,8 +38,8 @@ describe("sanitizeReason", () => {
       {
         pathString: "",
         diffType: "deepEquals",
-        prevValue: '{"a":1}',
-        nextValue: '{"a":2}',
+        prevValue: { a: 1 },
+        nextValue: { a: 2 },
       },
     ])
   })

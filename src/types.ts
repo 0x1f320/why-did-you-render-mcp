@@ -7,7 +7,16 @@ export interface FunctionValue {
   name: string
 }
 
-export type SafeValue = string | number | boolean | FunctionValue
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | FunctionValue
+  | JsonValue[]
+  | { [key: string]: JsonValue }
+
+export type SafeValue = JsonValue
 
 export interface SafeHookDifference {
   pathString: string

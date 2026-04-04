@@ -1,23 +1,24 @@
-const MAX_DEPTH = 4
-const MAX_LENGTH = 1024
+import type { JsonValue } from "../../types.js"
+
+const MAX_DEPTH = 8
 
 function serialize(
   value: unknown,
   seen: WeakSet<object>,
   depth: number,
-): unknown {
-  if (value === null || value === undefined) return value
+): JsonValue {
+  if (value === null) return null
+  if (value === undefined) return null
   if (typeof value === "function")
-    return `[Function: ${value.name || "anonymous"}]`
-  if (typeof value !== "object") return value
-  if (seen.has(value)) return "[Circular]"
-  if (depth >= MAX_DEPTH) {
-    if (Array.isArray(value)) return `[Array(${value.length})]`
-    const name = Object.getPrototypeOf(value)?.constructor?.name
-    return name && name !== "Object" ? `[${name}]` : "[Object]"
-  }
+    return { type: "function", name: value.name || "anonymous" }
+  if (typeof value === "number" || typeof value === "boolean") return value
+  if (typeof value === "string") return value
+  if (typeof value === "bigint") return value.toString()
+  if (typeof value === "symbol") return value.toString()
+  if (seen.has(value as object)) return "[Circular]"
+  if (depth >= MAX_DEPTH) return "[MaxDepth]"
 
-  seen.add(value)
+  seen.add(value as object)
 
   if (Array.isArray(value)) {
     return value.map((item) => serialize(item, seen, depth + 1))
@@ -26,26 +27,25 @@ function serialize(
   const proto = Object.getPrototypeOf(value)
   const ctorName = proto?.constructor?.name
   if (ctorName && ctorName !== "Object") {
-    // Built-in types like Date, Map, Set, RegExp
     if (value instanceof Date) return value.toISOString()
     if (value instanceof RegExp) return String(value)
-    if (value instanceof Map)
-      return `Map(${value.size}){${[...value.entries()]
-        .slice(0, 5)
-        .map(
-          ([k, v]) =>
-            `${serialize(k, seen, depth + 1)} => ${serialize(v, seen, depth + 1)}`,
-        )
-        .join(", ")}}`
-    if (value instanceof Set)
-      return `Set(${value.size}){${[...value]
-        .slice(0, 5)
-        .map((v) => serialize(v, seen, depth + 1))
-        .join(", ")}}`
+    if (value instanceof Map) {
+      const entries: { [key: string]: JsonValue } = {}
+      for (const [k, v] of value.entries()) {
+        entries[String(k)] = serialize(v, seen, depth + 1)
+      }
+      return { type: "Map", entries }
+    }
+    if (value instanceof Set) {
+      return {
+        type: "Set",
+        values: [...value].map((v) => serialize(v, seen, depth + 1)),
+      }
+    }
     return `[${ctorName}]`
   }
 
-  const result: Record<string, unknown> = {}
+  const result: { [key: string]: JsonValue } = {}
   for (const key of Object.keys(value as Record<string, unknown>)) {
     result[key] = serialize(
       (value as Record<string, unknown>)[key],
@@ -56,18 +56,6 @@ function serialize(
   return result
 }
 
-export function describeValue(
-  value: unknown,
-): string | number | boolean | { type: "function"; name: string } {
-  if (value === null) return "null"
-  if (value === undefined) return "undefined"
-  if (typeof value === "function")
-    return { type: "function", name: value.name || "anonymous" }
-  if (typeof value === "number" || typeof value === "boolean") return value
-  if (typeof value !== "object") return String(value)
-
-  const serialized = serialize(value, new WeakSet(), 0)
-  const json = JSON.stringify(serialized)
-  if (json.length > MAX_LENGTH) return `${json.slice(0, MAX_LENGTH)}…`
-  return json
+export function describeValue(value: unknown): JsonValue {
+  return serialize(value, new WeakSet(), 0)
 }
