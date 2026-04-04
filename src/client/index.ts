@@ -1,4 +1,10 @@
-import type { RenderReport, UpdateInfo, WsMessage } from "../types.js"
+import { type Socket, io } from "socket.io-client"
+import type {
+  ClientToServerEvents,
+  RenderReport,
+  ServerToClientEvents,
+  UpdateInfo,
+} from "../types.js"
 import { sanitizeReason } from "./utils/sanitize-reason.js"
 
 interface DevToolsHook {
@@ -12,7 +18,7 @@ declare global {
   var __REACT_DEVTOOLS_GLOBAL_HOOK__: DevToolsHook | undefined
 }
 
-const DEFAULT_WS_URL = "ws://localhost:4649"
+const DEFAULT_URL = "http://localhost:4649"
 
 const PREFIX_STYLE = "color: #38bdf8; font-weight: bold"
 const RESET_STYLE = "color: inherit; font-weight: normal"
@@ -45,57 +51,29 @@ function patchDevToolsHook(onCommit: () => void): void {
 }
 
 export function buildOptions(opts?: ClientOptions) {
-  const wsUrl = opts?.wsUrl ?? DEFAULT_WS_URL
+  const url = opts?.wsUrl ?? DEFAULT_URL
   const projectId = opts?.projectId ?? globalThis.location?.origin ?? "default"
-  const MAX_QUEUE_SIZE = 1000
-  const BASE_DELAY = 1000
-  const MAX_DELAY = 30000
 
-  let ws: WebSocket | null = null
-  let queue: WsMessage[] = []
   let commitId = 0
-  let retryDelay = BASE_DELAY
 
   patchDevToolsHook(() => {
     commitId++
   })
 
-  function connect() {
-    ws = new WebSocket(wsUrl)
+  const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(url, {
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 30000,
+    transports: ["websocket"],
+  })
 
-    ws.addEventListener("open", () => {
-      log(`Connected to ${wsUrl}`)
-      retryDelay = BASE_DELAY
-      for (const msg of queue) {
-        ws?.send(JSON.stringify(msg))
-      }
-      queue = []
-    })
+  socket.on("connect", () => {
+    log(`Connected to ${url}`)
+  })
 
-    ws.addEventListener("close", () => {
-      ws = null
-      setTimeout(connect, retryDelay)
-      retryDelay = Math.min(retryDelay * 2, MAX_DELAY)
-    })
-
-    ws.addEventListener("error", () => {
-      log(`Connection failed (${wsUrl}). Retrying in ${retryDelay / 1000}s...`)
-      ws?.close()
-    })
-  }
-
-  connect()
-
-  function send(msg: WsMessage) {
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(msg))
-    } else {
-      if (queue.length >= MAX_QUEUE_SIZE) {
-        queue.shift()
-      }
-      queue.push(msg)
-    }
-  }
+  socket.on("disconnect", () => {
+    log("Disconnected, reconnecting...")
+  })
 
   let pendingBatch: { commitId: number; reports: RenderReport[] } | null = null
   let flushScheduled = false
@@ -104,22 +82,18 @@ export function buildOptions(opts?: ClientOptions) {
     flushScheduled = false
     if (!pendingBatch || pendingBatch.reports.length === 0) return
 
-    send({
-      type: "render-batch",
+    socket.emit(
+      "render-batch",
+      pendingBatch.reports,
       projectId,
-      commitId: pendingBatch.commitId,
-      payload: pendingBatch.reports,
-    })
+      pendingBatch.commitId,
+    )
     pendingBatch = null
   }
 
   return {
     registerComponents(components: string[]) {
-      send({
-        type: "register",
-        projectId,
-        components,
-      })
+      socket.emit("register", components, projectId)
     },
     notifier(info: UpdateInfo) {
       const report: RenderReport = {

@@ -78,21 +78,24 @@ export interface RenderReport {
   hookName?: string
 }
 
-export type WsMessage =
-  | {
-      type: "render"
-      payload: RenderReport
-      projectId?: string
-      commitId?: number
-    }
-  | {
-      type: "render-batch"
-      payload: RenderReport[]
-      projectId?: string
-      commitId?: number
-    }
-  | {
-      type: "register"
-      components: string[]
-      projectId?: string
-    }
+// socket.io typed event contract — shared between client and server
+
+export interface ClientToServerEvents {
+  render: (payload: RenderReport, projectId: string, commitId?: number) => void
+  "render-batch": (
+    payload: RenderReport[],
+    projectId: string,
+    commitId?: number,
+  ) => void
+  register: (components: string[], projectId: string) => void
+}
+
+// biome-ignore lint/complexity/noBannedTypes: socket.io requires explicit empty interface for unused event maps
+export type ServerToClientEvents = {}
+
+// biome-ignore lint/complexity/noBannedTypes: socket.io requires explicit empty interface for unused event maps
+export type InterServerEvents = {}
+
+export interface SocketData {
+  projectId: string | null
+}

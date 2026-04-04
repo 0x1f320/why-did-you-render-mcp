@@ -1,60 +1,80 @@
-import { WebSocketServer } from "ws"
-import type { WsMessage } from "../types.js"
-import { HeartbeatManager } from "./liveness.js"
+import http from "node:http"
+import { Server } from "socket.io"
+import type {
+  ClientToServerEvents,
+  InterServerEvents,
+  ServerToClientEvents,
+  SocketData,
+} from "../types.js"
 import { store } from "./store/index.js"
 
-export function createWsServer(port: number): WebSocketServer | null {
-  const wss = new WebSocketServer({ port, host: "127.0.0.1" })
-  const heartbeat = new HeartbeatManager(wss, store)
+export function createWsServer(port: number): Server | null {
+  const httpServer = http.createServer()
 
-  wss.on("error", (err: NodeJS.ErrnoException) => {
+  const io = new Server<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData
+  >(httpServer, {
+    cors: { origin: "*" },
+    serveClient: false,
+  })
+
+  io.on("connection", (socket) => {
+    console.error(`[wdyr-mcp] browser connected (http://localhost:${port})`)
+    socket.data.projectId = null
+
+    socket.on("render", (payload, projectId, commitId) => {
+      socket.data.projectId = projectId
+      store.addRender(payload, projectId, commitId)
+    })
+
+    socket.on("render-batch", (payload, projectId, commitId) => {
+      socket.data.projectId = projectId
+      for (const report of payload) {
+        store.addRender(report, projectId, commitId)
+      }
+    })
+
+    socket.on("register", (components, projectId) => {
+      socket.data.projectId = projectId
+      store.setTrackedComponents(components, projectId)
+    })
+
+    socket.on("disconnect", () => {
+      console.error("[wdyr-mcp] browser disconnected")
+      const projectId = socket.data.projectId
+      if (!projectId) return
+
+      const remaining = [...io.sockets.sockets.values()].some(
+        (s) => s.id !== socket.id && s.data.projectId === projectId,
+      )
+
+      if (!remaining) {
+        console.error(
+          `[wdyr-mcp] last client for ${projectId} disconnected, clearing render data`,
+        )
+        store.clearRenders(projectId)
+      }
+    })
+  })
+
+  httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {
       console.error(
         `[wdyr-mcp] Port ${port} already in use, another instance owns the WS server. Skipping.`,
       )
     } else {
-      console.error("[wdyr-mcp] WS server error:", err)
+      console.error("[wdyr-mcp] server error:", err)
     }
   })
 
-  wss.on("listening", () => {
+  httpServer.listen(port, "127.0.0.1", () => {
     console.error(
-      `[wdyr-mcp] WebSocket server listening on ws://localhost:${port}`,
+      `[wdyr-mcp] socket.io server listening on http://localhost:${port}`,
     )
   })
 
-  wss.on("connection", (ws) => {
-    console.error(`[wdyr-mcp] browser connected (ws://localhost:${port})`)
-    heartbeat.trackConnection(ws)
-
-    ws.on("message", (raw) => {
-      try {
-        const msg: WsMessage = JSON.parse(String(raw))
-        const projectId = msg.projectId ?? "default"
-        heartbeat.setProjectId(ws, projectId)
-
-        if (msg.type === "render") {
-          store.addRender(msg.payload, projectId, msg.commitId)
-        } else if (msg.type === "render-batch") {
-          for (const report of msg.payload) {
-            store.addRender(report, projectId, msg.commitId)
-          }
-        } else if (msg.type === "register") {
-          store.setTrackedComponents(msg.components, projectId)
-        }
-      } catch {
-        console.error("[wdyr-mcp] invalid message received")
-      }
-    })
-
-    ws.on("close", () => {
-      console.error("[wdyr-mcp] browser disconnected")
-    })
-  })
-
-  wss.on("close", () => {
-    heartbeat.stop()
-  })
-
-  return wss
+  return io
 }
