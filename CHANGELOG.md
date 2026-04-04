@@ -1,3 +1,10 @@
+# [1.0.0-dev.23](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.22...v1.0.0-dev.23) (2026-04-04)
+
+
+### Bug Fixes
+
+* include stackFrames in tool output and document in descriptions ([#43](https://github.com/0x1f320/why-did-you-render-mcp/issues/43)) ([77358da](https://github.com/0x1f320/why-did-you-render-mcp/commit/77358da49b0f2f92780f879f95c6e13b7e7b2bd3))
+
 # [1.0.0-dev.22](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.21...v1.0.0-dev.22) (2026-04-04)
 
 
