@@ -11,6 +11,7 @@ export default defineConfig([
     dts: true,
     outputOptions: { banner: "#!/usr/bin/env node" },
     hash: false,
+    minify: true,
   },
   {
     entry: { "client/index": "src/client/index.ts" },
@@ -20,5 +21,6 @@ export default defineConfig([
     clean: false,
     dts: true,
     hash: false,
+    minify: true,
   },
 ])
