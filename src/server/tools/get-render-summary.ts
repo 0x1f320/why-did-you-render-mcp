@@ -39,6 +39,18 @@ export function register(server: McpServer): void {
   )
 }
 
+function formatReasons(reasons: {
+  props: number
+  state: number
+  hooks: number
+}): string {
+  const parts: string[] = []
+  if (reasons.props > 0) parts.push(`props: ${reasons.props}`)
+  if (reasons.state > 0) parts.push(`state: ${reasons.state}`)
+  if (reasons.hooks > 0) parts.push(`hooks: ${reasons.hooks}`)
+  return parts.length > 0 ? ` — ${parts.join(", ")}` : ""
+}
+
 function aggregateSummary(projectId?: string) {
   const summary = store.getSummary(projectId)
 
@@ -49,8 +61,8 @@ function aggregateSummary(projectId?: string) {
   const lines: string[] = []
   for (const [proj, components] of Object.entries(summary)) {
     lines.push(`[${proj}]`)
-    for (const [name, count] of Object.entries(components)) {
-      lines.push(`  ${name}: ${count} re-render(s)`)
+    for (const [name, { count, reasons }] of Object.entries(components)) {
+      lines.push(`  ${name}: ${count} re-render(s)${formatReasons(reasons)}`)
     }
   }
 
@@ -72,10 +84,10 @@ function commitSummary(projectId?: string) {
       .sort((a, b) => a - b)
     for (const commitId of sortedCommitIds) {
       const components = commits[commitId]
-      const total = Object.values(components).reduce((s, c) => s + c, 0)
+      const total = Object.values(components).reduce((s, c) => s + c.count, 0)
       lines.push(`  Commit #${commitId} (${total} re-render(s)):`)
-      for (const [name, count] of Object.entries(components)) {
-        lines.push(`    ${name}: ${count}`)
+      for (const [name, { count, reasons }] of Object.entries(components)) {
+        lines.push(`    ${name}: ${count}${formatReasons(reasons)}`)
       }
     }
   }

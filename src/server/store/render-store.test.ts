@@ -114,11 +114,75 @@ describe("RenderStore", () => {
 
     const summary = store.getSummary()
     expect(summary["http://localhost:3000"]).toEqual({
-      App: 2,
-      Header: 1,
+      App: { count: 2, reasons: { props: 2, state: 0, hooks: 0 } },
+      Header: { count: 1, reasons: { props: 1, state: 0, hooks: 0 } },
     })
     expect(summary["http://localhost:5173"]).toEqual({
-      Dashboard: 1,
+      Dashboard: { count: 1, reasons: { props: 1, state: 0, hooks: 0 } },
+    })
+  })
+
+  it("tracks reason breakdown in summary with mixed reason types", () => {
+    const stateReason: SafeReasonForUpdate = {
+      propsDifferences: false,
+      stateDifferences: [
+        {
+          pathString: "value",
+          diffType: "deepEquals",
+          prevValue: "1",
+          nextValue: "2",
+        },
+      ],
+      hookDifferences: false,
+    }
+    const hooksReason: SafeReasonForUpdate = {
+      propsDifferences: false,
+      stateDifferences: false,
+      hookDifferences: [
+        {
+          pathString: "",
+          diffType: "deepEquals",
+          prevValue: "1",
+          nextValue: "2",
+        },
+      ],
+    }
+    const mixedReason: SafeReasonForUpdate = {
+      propsDifferences: [
+        {
+          pathString: "a",
+          diffType: "deepEquals",
+          prevValue: "1",
+          nextValue: "2",
+        },
+      ],
+      stateDifferences: [
+        {
+          pathString: "b",
+          diffType: "deepEquals",
+          prevValue: "3",
+          nextValue: "4",
+        },
+      ],
+      hookDifferences: false,
+    }
+
+    store.addRender(
+      { displayName: "App", reason: stateReason },
+      "http://localhost:3000",
+    )
+    store.addRender(
+      { displayName: "App", reason: hooksReason },
+      "http://localhost:3000",
+    )
+    store.addRender(
+      { displayName: "App", reason: mixedReason },
+      "http://localhost:3000",
+    )
+
+    const summary = store.getSummary("http://localhost:3000")
+    expect(summary["http://localhost:3000"]).toEqual({
+      App: { count: 3, reasons: { props: 1, state: 2, hooks: 1 } },
     })
   })
 

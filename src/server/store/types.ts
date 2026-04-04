@@ -16,3 +16,8 @@ export interface RenderWithProject extends RenderReport {
   project: string
   commitId?: number
 }
+
+export interface ComponentSummary {
+  count: number
+  reasons: { props: number; state: number; hooks: number }
+}
