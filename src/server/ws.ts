@@ -1,31 +1,87 @@
-import { WebSocketServer } from "ws";
-import type { WsMessage } from "../types.js";
-import { addRender } from "./store.js";
+import http from "node:http"
+import { Server } from "socket.io"
+import type {
+  ClientToServerEvents,
+  InterServerEvents,
+  ServerToClientEvents,
+  SocketData,
+} from "../types.js"
+import { store } from "./store/index.js"
 
-export function createWsServer(port: number): WebSocketServer {
-	const wss = new WebSocketServer({ port });
+export function createWsServer(port: number): Server | null {
+  const httpServer = http.createServer()
 
-	wss.on("connection", (ws) => {
-		console.error(`[wdyr-mcp] browser connected (ws://localhost:${port})`);
+  const io = new Server<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData
+  >(httpServer, {
+    cors: { origin: "*" },
+    serveClient: false,
+    transports: ["websocket"],
+    maxHttpBufferSize: 50e6,
+  })
 
-		ws.on("message", (raw) => {
-			try {
-				const msg: WsMessage = JSON.parse(String(raw));
-				if (msg.type === "render") {
-					addRender(msg.payload);
-				}
-			} catch {
-				console.error("[wdyr-mcp] invalid message received");
-			}
-		});
+  io.on("connection", (socket) => {
+    console.error(`[wdyr-mcp] browser connected (http://localhost:${port})`)
+    socket.data.projectId = null
 
-		ws.on("close", () => {
-			console.error("[wdyr-mcp] browser disconnected");
-		});
-	});
+    socket.on("render", (payload, projectId, commitId) => {
+      socket.data.projectId = projectId
+      store.addRender(payload, projectId, commitId)
+    })
 
-	console.error(
-		`[wdyr-mcp] WebSocket server listening on ws://localhost:${port}`,
-	);
-	return wss;
+    socket.on("render-batch", (payload, projectId, commitId) => {
+      socket.data.projectId = projectId
+      for (const report of payload) {
+        store.addRender(report, projectId, commitId)
+      }
+    })
+
+    socket.on("register", (components, projectId) => {
+      socket.data.projectId = projectId
+      store.setTrackedComponents(components, projectId)
+    })
+
+    socket.on("config", (config, projectId) => {
+      socket.data.projectId = projectId
+      store.setWdyrConfig(config, projectId)
+    })
+
+    socket.on("disconnect", () => {
+      console.error("[wdyr-mcp] browser disconnected")
+      const projectId = socket.data.projectId
+      if (!projectId) return
+
+      const remaining = [...io.sockets.sockets.values()].some(
+        (s) => s.id !== socket.id && s.data.projectId === projectId,
+      )
+
+      if (!remaining) {
+        console.error(
+          `[wdyr-mcp] last client for ${projectId} disconnected, clearing render data`,
+        )
+        store.clearRenders(projectId)
+      }
+    })
+  })
+
+  httpServer.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `[wdyr-mcp] Port ${port} already in use, another instance owns the WS server. Skipping.`,
+      )
+    } else {
+      console.error("[wdyr-mcp] server error:", err)
+    }
+  })
+
+  httpServer.listen(port, "127.0.0.1", () => {
+    console.error(
+      `[wdyr-mcp] socket.io server listening on http://localhost:${port}`,
+    )
+  })
+
+  return io
 }
