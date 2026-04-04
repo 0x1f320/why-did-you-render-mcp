@@ -1,3 +1,10 @@
+# [1.0.0-dev.19](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.18...v1.0.0-dev.19) (2026-04-04)
+
+
+### Features
+
+* pass WDYR options through buildOptions and expose config via get_tracked_components ([#38](https://github.com/0x1f320/why-did-you-render-mcp/issues/38)) ([c7354b1](https://github.com/0x1f320/why-did-you-render-mcp/commit/c7354b17f733e4f53ec59e3dfff0e6b150ecd77e))
+
 # [1.0.0-dev.18](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.17...v1.0.0-dev.18) (2026-04-04)
 
 # [1.0.0-dev.17](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.16...v1.0.0-dev.17) (2026-04-04)
