@@ -4,10 +4,13 @@ const DEFAULT_WS_URL = "ws://localhost:4649";
 
 export interface ClientOptions {
 	wsUrl?: string;
+	projectId?: string;
 }
 
 export function buildOptions(opts?: ClientOptions) {
 	const wsUrl = opts?.wsUrl ?? DEFAULT_WS_URL;
+	const projectId =
+		opts?.projectId ?? globalThis.location?.origin ?? "default";
 	let ws: WebSocket | null = null;
 	let queue: WsMessage[] = [];
 
@@ -45,6 +48,7 @@ export function buildOptions(opts?: ClientOptions) {
 		notifier(info: UpdateInfo) {
 			send({
 				type: "render",
+				projectId,
 				payload: {
 					displayName: info.displayName,
 					reason: info.reason,
