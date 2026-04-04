@@ -46,6 +46,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "error-stack-parser": "^2.1.4",
     "socket.io": "^4.8.3",
