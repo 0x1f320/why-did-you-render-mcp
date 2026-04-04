@@ -1,3 +1,5 @@
+# [1.0.0-dev.11](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.10...v1.0.0-dev.11) (2026-04-04)
+
 # [1.0.0-dev.10](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.9...v1.0.0-dev.10) (2026-04-04)
 
 
