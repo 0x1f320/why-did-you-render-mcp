@@ -39,10 +39,8 @@ import whyDidYouRender from "@welldone-software/why-did-you-render";
 import { buildOptions } from "@0x1f320.sh/why-did-you-render-mcp/client";
 
 if (process.env.NODE_ENV === "development") {
-  const { notifier } = buildOptions();
-
   whyDidYouRender(React, {
-    notifier,
+    ...buildOptions(),
     trackAllPureComponents: true,
   });
 }
@@ -59,30 +57,98 @@ const { notifier } = buildOptions({
 
 ### 2. Add the MCP server to your agent
 
-Add the server to your MCP client configuration. For example, in Claude Desktop's `claude_desktop_config.json`:
+<details>
+<summary>Claude Code</summary>
+
+```sh
+claude mcp add why-did-you-render -- npx -y @0x1f320.sh/why-did-you-render-mcp
+```
+
+</details>
+
+<details>
+<summary>Claude Desktop</summary>
+
+```sh
+claude mcp add-json why-did-you-render '{"command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp"]}' -s user
+```
+
+Or manually edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) / `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
   "mcpServers": {
     "why-did-you-render": {
       "command": "npx",
-      "args": ["@0x1f320.sh/why-did-you-render-mcp"]
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
     }
   }
 }
 ```
 
-Or if you installed it globally:
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+```sh
+cursor --add-mcp '{"name":"why-did-you-render","command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp"]}'
+```
+
+Or add to `.cursor/mcp.json` in your project:
 
 ```json
 {
   "mcpServers": {
     "why-did-you-render": {
-      "command": "why-did-you-render-mcp"
+      "command": "npx",
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
     }
   }
 }
 ```
+
+</details>
+
+<details>
+<summary>Windsurf</summary>
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "why-did-you-render": {
+      "command": "npx",
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>VS Code (GitHub Copilot)</summary>
+
+```sh
+code --add-mcp '{"name":"why-did-you-render","command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp"]}'
+```
+
+Or add to `.vscode/mcp.json` in your project:
+
+```json
+{
+  "servers": {
+    "why-did-you-render": {
+      "command": "npx",
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
+    }
+  }
+}
+```
+
+</details>
 
 ### 3. Start your dev server and interact with the app
 
