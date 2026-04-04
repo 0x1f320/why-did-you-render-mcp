@@ -195,4 +195,160 @@ describe("describeValue", () => {
     expect(describeValue("")).toBe("")
     expect(describeValue({})).toEqual({})
   })
+
+  it("converts React element to react-node", () => {
+    function MyComponent() {}
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: MyComponent,
+      props: { className: "foo", onClick: () => {} },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "MyComponent", memo: false, forwardRef: false },
+      props: {
+        className: "foo",
+        onClick: { type: "function", name: "onClick" },
+      },
+    })
+  })
+
+  it("detects memo-wrapped React element", () => {
+    function Inner() {}
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: {
+        $$typeof: Symbol.for("react.memo"),
+        type: Inner,
+      },
+      props: { count: 3 },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "Inner", memo: true, forwardRef: false },
+      props: { count: 3 },
+    })
+  })
+
+  it("detects forwardRef-wrapped React element", () => {
+    function Button() {}
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: {
+        $$typeof: Symbol.for("react.forward_ref"),
+        render: Button,
+      },
+      props: { disabled: true },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "Button", memo: false, forwardRef: true },
+      props: { disabled: true },
+    })
+  })
+
+  it("detects memo(forwardRef(...)) wrapped React element", () => {
+    function Input() {}
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: {
+        $$typeof: Symbol.for("react.memo"),
+        type: {
+          $$typeof: Symbol.for("react.forward_ref"),
+          render: Input,
+        },
+      },
+      props: { value: "hi" },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "Input", memo: true, forwardRef: true },
+      props: { value: "hi" },
+    })
+  })
+
+  it("uses displayName for React element component", () => {
+    function Foo() {}
+    Foo.displayName = "CustomName"
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: Foo,
+      props: {},
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "CustomName", memo: false, forwardRef: false },
+      props: {},
+    })
+  })
+
+  it("handles host element (string type) in React element", () => {
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: "div",
+      props: { id: "root" },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "div", memo: false, forwardRef: false },
+      props: { id: "root" },
+    })
+  })
+
+  it("excludes children from React element props", () => {
+    const el = {
+      $$typeof: Symbol.for("react.element"),
+      type: "span",
+      props: { className: "label", children: "Hello" },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "span", memo: false, forwardRef: false },
+      props: { className: "label" },
+    })
+  })
+
+  it("handles React transitional element symbol", () => {
+    const el = {
+      $$typeof: Symbol.for("react.transitional.element"),
+      type: "div",
+      props: {},
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "div", memo: false, forwardRef: false },
+      props: {},
+    })
+  })
+
+  it("handles legacy numeric React element marker", () => {
+    const el = {
+      $$typeof: 0xeac7,
+      type: "p",
+      props: { style: { color: "red" } },
+      key: null,
+      ref: null,
+    }
+    expect(describeValue(el)).toEqual({
+      type: "react-node",
+      component: { name: "p", memo: false, forwardRef: false },
+      props: { style: { color: "red" } },
+    })
+  })
 })
