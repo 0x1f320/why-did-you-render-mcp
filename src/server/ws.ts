@@ -39,6 +39,28 @@ function attachHandlers(io: IoServer, port: number) {
       store.setWdyrConfig(config, projectId)
     })
 
+    socket.on("relay-pause", async (projectId) => {
+      if (projectId) {
+        const sockets = await io.fetchSockets()
+        for (const s of sockets) {
+          if (s.data.projectId === projectId) s.emit("pause")
+        }
+      } else {
+        io.emit("pause")
+      }
+    })
+
+    socket.on("relay-resume", async (projectId) => {
+      if (projectId) {
+        const sockets = await io.fetchSockets()
+        for (const s of sockets) {
+          if (s.data.projectId === projectId) s.emit("resume")
+        }
+      } else {
+        io.emit("resume")
+      }
+    })
+
     socket.on("disconnect", () => {
       console.error("[wdyr-mcp] browser disconnected")
       const projectId = socket.data.projectId

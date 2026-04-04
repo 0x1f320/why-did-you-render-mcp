@@ -8,8 +8,8 @@ An MCP (Model Context Protocol) server that bridges [why-did-you-render](https:/
 Browser (project-a) ──┐
 Browser (project-b) ──┤
                       ▼
-                MCP #1 → WS(:4649) ✅ (first instance binds)
-                MCP #2 → WS(:4649) ❌ → skip (EADDRINUSE)
+                MCP #1 → WS(:4649) ✅ (first instance binds, "owner")
+                MCP #2 → WS(:4649) ❌ → relay client ──▶ MCP #1
                       │
                       ▼
                ~/.wdyr-mcp/renders/  (JSONL files, shared across instances)
@@ -17,7 +17,7 @@ Browser (project-b) ──┤
                └─ http___localhost_5173.jsonl
 ```
 
-- **Multiple MCP instances** can run simultaneously. Only the first instance binds the WebSocket server; others gracefully skip via EADDRINUSE handling. All instances read/write the same JSONL files.
+- **Multiple MCP instances** can run simultaneously. Only the first instance (the "owner") binds the WebSocket server; others gracefully skip via EADDRINUSE handling and instead connect as socket.io clients to the owner for relaying commands (e.g. pause/resume). All instances read/write the same JSONL files.
 - **Multi-project support** — Each project is identified by the browser's `location.origin` (e.g. `http://localhost:3000`). Render data is stored in per-project JSONL files under `~/.wdyr-mcp/renders/`.
 - **Project disambiguation** — When only one project exists, tools auto-select it. When multiple exist, tools return a message instructing the agent to ask the user for their dev server URL.
 
@@ -27,16 +27,17 @@ Browser (project-b) ──┤
   - `utils/parse-stack.ts` — Parses `Error` stack traces into `StackFrame[]`. Filters out React internals, WDYR internals, and bundler noise. Classifies frames as `"hook"` (names starting with `use`) or `"component"`. Has both async (`parseStack`) and sync (`parseStackSync`) variants.
   - `utils/resolve-source-map.ts` — Resolves bundled file locations back to original source via `@jridgewell/trace-mapping`. Fetches and caches `.map` files; falls back to the bundled path if source maps are unavailable.
 - **Server** (`src/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, persists render reports to JSONL files, and exposes them via MCP tools over stdio.
-  - `ws.ts` — WebSocket server with EADDRINUSE graceful handling.
+  - `ws.ts` — WebSocket server with EADDRINUSE graceful handling. Also handles `relay-pause`/`relay-resume` events from non-owner MCP instances and broadcasts them to browser clients.
+  - `relay-client.ts` — Socket.io client that non-owner MCP instances use to relay commands (pause/resume) to the owner's WS server. Connection is lazy (created on first relay call) and persists for the process lifetime.
   - `store/` — `RenderStore` class backed by JSONL files in `~/.wdyr-mcp/renders/`. Uses value dictionary deduplication (xxhash-wasm) to keep files compact.
-  - `tools/` — One file per MCP tool: `get-renders`, `get-render-summary`, `get-commits`, `get-renders-by-commit`, `get-tracked-components`, `get-projects`, `clear-renders`.
+  - `tools/` — One file per MCP tool: `get-renders`, `get-render-summary`, `get-commits`, `get-renders-by-commit`, `get-tracked-components`, `get-projects`, `clear-renders`, `pause-renders`, `resume-renders`.
 - **Types** (`src/types.ts`) — Shared type definitions including `RenderReport`, `SafeReasonForUpdate`, `StackFrame`, `StackFrameLocation`, and `WsMessage`.
 
 ### Design Decisions
 
 - **JSONL over SQLite** — Render data is ephemeral and the access pattern is simple (append, read all, filter, clear). JSONL avoids native addon dependencies (better-sqlite3) and migration complexity while supporting concurrent multi-process read/write.
 - **Value dictionary deduplication** — Render reports often contain identical `prevValue`/`nextValue` objects across thousands of entries (e.g. the same prop object causing repeated re-renders). To avoid JSONL files growing to hundreds of MB, each file's first line is a content-addressed dictionary (`@@dict`) mapping xxhash-wasm h64 hashes to unique values. Render lines reference dictionary entries via `@@ref:<hash>` sentinel strings instead of inlining the full value. Only object/array values are dehydrated; primitives stay inline. On read, `readJsonl` transparently hydrates refs back to actual values, so consumers are unaffected. The dictionary is rewritten on each flush (acceptable because deduplication keeps files small).
-- **No daemon process** — Instead of a separate long-running daemon managing shared state, each MCP instance is independent. The WS server is opportunistically claimed by whichever instance starts first; data sharing happens through the filesystem.
+- **No daemon process** — Instead of a separate long-running daemon managing shared state, each MCP instance is independent. The WS server is opportunistically claimed by whichever instance starts first; data sharing happens through the filesystem. Commands that require WS access (pause/resume) are relayed to the owner via a socket.io client connection.
 - **Project ID from `location.origin`** — The browser's origin is used as the project identifier because it's auto-available (zero config for the user) and unique per dev server. The MCP server doesn't need to know the project ID upfront — tools query the JSONL store and disambiguate as needed.
 - **One file per function** — Tools and utilities are split into individual files (`tools/<tool-name>.ts`, `store/utils/<fn-name>.ts`) for clarity. Each file has a single responsibility.
 - **Commit ID via DevTools hook** — React calls `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot` once per commit, synchronously. The client patches this hook to increment a counter, and WDYR's notifier (called during render phase) reads the current counter value. Since React guarantees `commitRoot → next renderRoot` ordering, renders within the same commit share the same ID. If the hook doesn't exist at init time, the client creates a minimal stub so React will call into it.
@@ -72,6 +73,7 @@ src/
 ├── server/
 │   ├── index.ts                    # Entry point (MCP + WS server init)
 │   ├── ws.ts                       # WebSocket server (EADDRINUSE handling)
+│   ├── relay-client.ts             # Socket.io client for relaying commands to WS owner
 │   ├── store/
 │   │   ├── index.ts                # RenderStore export + singleton
 │   │   ├── render-store.ts         # RenderStore class
@@ -90,6 +92,8 @@ src/
 │       ├── get-tracked-components.ts # Currently tracked components
 │       ├── get-projects.ts         # Active projects list
 │       ├── clear-renders.ts        # Clear stored render data
+│       ├── pause-renders.ts        # Pause render collection (direct or relayed)
+│       ├── resume-renders.ts       # Resume render collection (direct or relayed)
 │       └── utils/
 │           ├── resolve-project.ts  # Auto-select or disambiguate project
 │           └── text-result.ts      # MCP text response helper

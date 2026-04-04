@@ -169,6 +169,8 @@ Once both the MCP server and your React dev server are running, interact with yo
 | `get_tracked_components` | Lists components currently tracked by why-did-you-render. |
 | `get_projects` | Lists all active projects (identified by their origin URL). |
 | `clear_renders` | Clears all stored render data. Optionally scope to a specific project. |
+| `pause_renders` | Pauses render data collection in the browser. Clients stop reporting until resumed. |
+| `resume_renders` | Resumes render data collection previously paused with `pause_renders`. |
 
 When multiple projects are active, tools accept an optional `project` parameter (the browser's origin URL, e.g. `http://localhost:3000`). If omitted and only one project exists, it is auto-selected.
 
@@ -204,8 +206,8 @@ Each render report is tagged with a React **commit ID**, allowing agents to insp
 Browser (project-a) ──┐
 Browser (project-b) ──┤
                       ▼
-                MCP #1 → WS(:4649)  (first instance binds)
-                MCP #2 → WS(:4649)  → skip (EADDRINUSE)
+                MCP #1 → WS(:4649)  (first instance binds, "owner")
+                MCP #2 → WS(:4649)  → relay client ──▶ MCP #1
                       │
                       ▼
                ~/.wdyr-mcp/renders/  (JSONL files, shared across instances)
@@ -213,9 +215,9 @@ Browser (project-b) ──┤
                └─ http___localhost_5173.jsonl
 ```
 
-- **Multiple MCP instances** can run simultaneously. Only the first instance starts the WebSocket server; others gracefully skip. All instances share the same JSONL data directory.
+- **Multiple MCP instances** can run simultaneously. Only the first instance (the "owner") starts the WebSocket server; others connect as socket.io clients to relay commands (e.g. pause/resume) to the owner. All instances share the same JSONL data directory.
 - **Multi-project support** — Each project is identified by `location.origin`. Render data is stored in per-project JSONL files.
-- **No daemon required** — Each MCP instance is independent. The WebSocket server is opportunistically claimed by whichever instance starts first.
+- **No daemon required** — Each MCP instance is independent. The WebSocket server is opportunistically claimed by whichever instance starts first. Commands requiring WS access are relayed to the owner.
 - **Value dictionary deduplication** — Render reports often repeat the same `prevValue`/`nextValue` objects across thousands of entries. Each JSONL file stores a content-addressed dictionary on its first line, mapping xxhash-wasm hashes to unique values. Render lines reference them via `@@ref:<hash>` sentinels instead of inlining the full object, dramatically reducing file size. Reads hydrate refs transparently.
 
 ## Configuration
