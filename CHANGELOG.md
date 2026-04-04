@@ -1,3 +1,10 @@
+## [1.0.1-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0...v1.0.1-dev.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* retry WS server bind when owner instance exits ([#45](https://github.com/0x1f320/why-did-you-render-mcp/issues/45)) ([71334a6](https://github.com/0x1f320/why-did-you-render-mcp/commit/71334a676af310c0cf620854638cc621cdc8cbb4))
+
 # 1.0.0 (2026-04-04)
 
 
