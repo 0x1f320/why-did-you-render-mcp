@@ -1,3 +1,10 @@
+# [1.1.0-dev.3](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.2...v1.1.0-dev.3) (2026-04-04)
+
+
+### Features
+
+* capture render duration from React Fiber actualDuration ([#49](https://github.com/0x1f320/why-did-you-render-mcp/issues/49)) ([8bffa34](https://github.com/0x1f320/why-did-you-render-mcp/commit/8bffa34d30a4a45d745ddecf793635fcaf3f5872))
+
 # [1.1.0-dev.2](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.1...v1.1.0-dev.2) (2026-04-04)
 
 
