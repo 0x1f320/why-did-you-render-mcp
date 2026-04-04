@@ -302,6 +302,144 @@ describe("RenderStore", () => {
     })
   })
 
+  describe("clearRendersByComponent", () => {
+    it("removes only renders matching the component name", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("Header"), "http://localhost:3000")
+      store.addRender(makeReport("App"), "http://localhost:3000")
+
+      const removed = store.clearRendersByComponent(
+        "App",
+        "http://localhost:3000",
+      )
+      expect(removed).toBe(2)
+
+      const remaining = store.getAllRenders("http://localhost:3000")
+      expect(remaining).toHaveLength(1)
+      expect(remaining[0].displayName).toBe("Header")
+    })
+
+    it("deletes the file when all renders match", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("App"), "http://localhost:3000")
+
+      const removed = store.clearRendersByComponent(
+        "App",
+        "http://localhost:3000",
+      )
+      expect(removed).toBe(2)
+      expect(store.getAllRenders("http://localhost:3000")).toEqual([])
+    })
+
+    it("returns 0 when no renders match", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+
+      const removed = store.clearRendersByComponent(
+        "NonExistent",
+        "http://localhost:3000",
+      )
+      expect(removed).toBe(0)
+      expect(store.getAllRenders("http://localhost:3000")).toHaveLength(1)
+    })
+
+    it("scopes to the given project", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("App"), "http://localhost:5173")
+
+      store.clearRendersByComponent("App", "http://localhost:3000")
+
+      expect(store.getAllRenders("http://localhost:3000")).toEqual([])
+      expect(store.getAllRenders("http://localhost:5173")).toHaveLength(1)
+    })
+
+    it("clears across all projects when no projectId given", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("App"), "http://localhost:5173")
+      store.addRender(makeReport("Header"), "http://localhost:3000")
+
+      const removed = store.clearRendersByComponent("App")
+      expect(removed).toBe(2)
+      expect(store.getAllRenders()).toHaveLength(1)
+      expect(store.getAllRenders()[0].displayName).toBe("Header")
+    })
+
+    it("works across multiple commit files", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 1)
+      store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+      store.addRender(makeReport("App"), "http://localhost:3000", 2)
+
+      const removed = store.clearRendersByComponent(
+        "App",
+        "http://localhost:3000",
+      )
+      expect(removed).toBe(2)
+
+      const remaining = store.getAllRenders("http://localhost:3000")
+      expect(remaining).toHaveLength(1)
+      expect(remaining[0].displayName).toBe("Header")
+    })
+  })
+
+  describe("clearRendersByCommit", () => {
+    it("removes commit files with ID below the threshold", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 1)
+      store.addRender(makeReport("Header"), "http://localhost:3000", 2)
+      store.addRender(makeReport("Footer"), "http://localhost:3000", 3)
+
+      const deleted = store.clearRendersByCommit(3, "http://localhost:3000")
+      expect(deleted).toBe(2)
+
+      const remaining = store.getAllRenders("http://localhost:3000")
+      expect(remaining).toHaveLength(1)
+      expect(remaining[0].commitId).toBe(3)
+    })
+
+    it("keeps commits at or above the threshold", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 5)
+      store.addRender(makeReport("Header"), "http://localhost:3000", 10)
+
+      const deleted = store.clearRendersByCommit(5, "http://localhost:3000")
+      expect(deleted).toBe(0)
+
+      expect(store.getAllRenders("http://localhost:3000")).toHaveLength(2)
+    })
+
+    it("does not remove nocommit files", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000")
+      store.addRender(makeReport("Header"), "http://localhost:3000", 1)
+
+      const deleted = store.clearRendersByCommit(5, "http://localhost:3000")
+      expect(deleted).toBe(1)
+
+      const remaining = store.getAllRenders("http://localhost:3000")
+      expect(remaining).toHaveLength(1)
+      expect(remaining[0].displayName).toBe("App")
+    })
+
+    it("scopes to the given project", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 1)
+      store.addRender(makeReport("Dashboard"), "http://localhost:5173", 1)
+
+      store.clearRendersByCommit(5, "http://localhost:3000")
+
+      expect(store.getAllRenders("http://localhost:3000")).toEqual([])
+      expect(store.getAllRenders("http://localhost:5173")).toHaveLength(1)
+    })
+
+    it("clears across all projects when no projectId given", () => {
+      store.addRender(makeReport("App"), "http://localhost:3000", 1)
+      store.addRender(makeReport("Dashboard"), "http://localhost:5173", 1)
+      store.addRender(makeReport("Footer"), "http://localhost:3000", 5)
+
+      const deleted = store.clearRendersByCommit(3)
+      expect(deleted).toBe(2)
+
+      const remaining = store.getAllRenders()
+      expect(remaining).toHaveLength(1)
+      expect(remaining[0].commitId).toBe(5)
+    })
+  })
+
   describe("value dictionary deduplication", () => {
     const objectReason: SafeReasonForUpdate = {
       propsDifferences: [

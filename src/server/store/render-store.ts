@@ -190,6 +190,47 @@ export class RenderStore {
     }
   }
 
+  clearRendersByComponent(component: string, projectId?: string): number {
+    this.flush(projectId)
+    const files = projectId ? this.projectFiles(projectId) : this.jsonlFiles()
+    let removed = 0
+
+    for (const f of files) {
+      const filePath = join(this.dir, f)
+      const renders = readJsonl(filePath)
+      const before = renders.length
+      const remaining = renders.filter((r) => r.displayName !== component)
+      removed += before - remaining.length
+
+      if (remaining.length === 0) {
+        unlinkSync(filePath)
+        this.clearBuffersForFile(f)
+      } else if (remaining.length < before) {
+        this.rewriteFile(filePath, remaining)
+        this.clearBuffersForFile(f)
+      }
+    }
+
+    return removed
+  }
+
+  clearRendersByCommit(beforeCommit: number, projectId?: string): number {
+    this.flush(projectId)
+    const files = projectId ? this.projectFiles(projectId) : this.jsonlFiles()
+    let deleted = 0
+
+    for (const f of files) {
+      const parsed = this.parseFilename(f)
+      if (parsed?.commitId != null && parsed.commitId < beforeCommit) {
+        unlinkSync(join(this.dir, f))
+        this.clearBuffersForFile(f)
+        deleted++
+      }
+    }
+
+    return deleted
+  }
+
   getProjects(): string[] {
     this.flush()
     const projects = new Set<string>()
@@ -319,6 +360,35 @@ export class RenderStore {
     }
 
     return result
+  }
+
+  private rewriteFile(filePath: string, renders: StoredRender[]): void {
+    const lines = renders.map((r) => JSON.stringify(r))
+    writeFileSync(filePath, `${lines.join("\n")}\n`)
+  }
+
+  private clearBuffersForFile(filename: string): void {
+    const parsed = this.parseFilename(filename)
+    if (!parsed) return
+
+    for (const [bk, meta] of this.bufferMeta) {
+      const sanitized = sanitizeProjectId(meta.projectId)
+      if (sanitized !== parsed.projectSanitized) continue
+      const commitMatch =
+        parsed.commitId != null
+          ? meta.commitId === parsed.commitId
+          : meta.commitId == null
+      if (!commitMatch) continue
+
+      this.buffers.delete(bk)
+      this.dicts.delete(bk)
+      this.bufferMeta.delete(bk)
+      const timer = this.timers.get(bk)
+      if (timer) {
+        clearTimeout(timer)
+        this.timers.delete(bk)
+      }
+    }
   }
 
   private bufferKey(projectId: string, commitId?: number): string {
