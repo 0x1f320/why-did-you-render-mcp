@@ -1,14 +1,14 @@
-import type { SafeHookDifference } from "../../types.js";
-import { describeValue } from "./describe-value.js";
+import type { SafeHookDifference } from "../../types.js"
+import { describeValue } from "./describe-value.js"
 
 export function sanitizeDifferences(
-	diffs: unknown,
+  diffs: unknown,
 ): SafeHookDifference[] | false {
-	if (!Array.isArray(diffs)) return false;
-	return diffs.map((diff) => ({
-		pathString: diff.pathString,
-		diffType: diff.diffType,
-		prevValue: describeValue(diff.prevValue),
-		nextValue: describeValue(diff.nextValue),
-	}));
+  if (!Array.isArray(diffs)) return false
+  return diffs.map((diff) => ({
+    pathString: diff.pathString,
+    diffType: diff.diffType,
+    prevValue: describeValue(diff.prevValue),
+    nextValue: describeValue(diff.nextValue),
+  }))
 }
