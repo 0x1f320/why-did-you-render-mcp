@@ -10,7 +10,7 @@ export function register(server: McpServer): void {
     {
       title: "Get Render Summary",
       description:
-        "Returns a summary of unnecessary re-renders grouped by component name with counts. If multiple projects are active and no project is specified, the tool will ask you to disambiguate.",
+        "Returns a summary of re-renders grouped by component name with counts. If multiple projects are active and no project is specified, the tool will ask you to disambiguate.",
       inputSchema: {
         project: z
           .string()
@@ -27,7 +27,7 @@ export function register(server: McpServer): void {
       const summary = store.getSummary(resolved.projectId)
 
       if (Object.keys(summary).length === 0) {
-        return textResult("No unnecessary renders recorded yet.")
+        return textResult("No renders recorded yet.")
       }
 
       const lines: string[] = []
@@ -38,7 +38,7 @@ export function register(server: McpServer): void {
         }
       }
 
-      return textResult(`Unnecessary re-render summary:\n\n${lines.join("\n")}`)
+      return textResult(`Re-render summary:\n\n${lines.join("\n")}`)
     },
   )
 }
