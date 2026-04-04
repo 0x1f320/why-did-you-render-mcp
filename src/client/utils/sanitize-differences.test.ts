@@ -53,8 +53,8 @@ describe("sanitizeDifferences", () => {
       {
         pathString: "count",
         diffType: "deepEquals",
-        prevValue: "1",
-        nextValue: "2",
+        prevValue: 1,
+        nextValue: 2,
       },
       {
         pathString: "items",

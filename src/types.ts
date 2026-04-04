@@ -7,7 +7,7 @@ export interface FunctionValue {
   name: string
 }
 
-export type SafeValue = string | FunctionValue
+export type SafeValue = string | number | boolean | FunctionValue
 
 export interface SafeHookDifference {
   pathString: string

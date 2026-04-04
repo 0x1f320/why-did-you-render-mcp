@@ -58,11 +58,12 @@ function serialize(
 
 export function describeValue(
   value: unknown,
-): string | { type: "function"; name: string } {
+): string | number | boolean | { type: "function"; name: string } {
   if (value === null) return "null"
   if (value === undefined) return "undefined"
   if (typeof value === "function")
     return { type: "function", name: value.name || "anonymous" }
+  if (typeof value === "number" || typeof value === "boolean") return value
   if (typeof value !== "object") return String(value)
 
   const serialized = serialize(value, new WeakSet(), 0)

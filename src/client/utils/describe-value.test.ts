@@ -22,10 +22,19 @@ describe("describeValue", () => {
     })
   })
 
-  it("describes primitives", () => {
-    expect(describeValue(42)).toBe("42")
+  it("preserves numbers as-is", () => {
+    expect(describeValue(42)).toBe(42)
+    expect(describeValue(0)).toBe(0)
+    expect(describeValue(-3.14)).toBe(-3.14)
+  })
+
+  it("preserves booleans as-is", () => {
+    expect(describeValue(true)).toBe(true)
+    expect(describeValue(false)).toBe(false)
+  })
+
+  it("converts other primitives to string", () => {
     expect(describeValue("hello")).toBe("hello")
-    expect(describeValue(true)).toBe("true")
   })
 
   it("serializes arrays with contents", () => {
