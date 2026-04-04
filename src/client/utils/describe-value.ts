@@ -11,7 +11,13 @@ function serialize(
   if (value === undefined) return null
   if (typeof value === "function")
     return { type: "function", name: value.name || "anonymous" }
-  if (typeof value === "number" || typeof value === "boolean") return value
+  if (typeof value === "boolean") return value
+  if (typeof value === "number") {
+    if (Number.isNaN(value)) return "NaN"
+    if (!Number.isFinite(value)) return value > 0 ? "Infinity" : "-Infinity"
+    if (Object.is(value, -0)) return "-0"
+    return value
+  }
   if (typeof value === "string") return value
   if (typeof value === "bigint") return value.toString()
   if (typeof value === "symbol") return value.toString()

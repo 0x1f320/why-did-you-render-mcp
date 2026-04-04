@@ -124,4 +124,25 @@ describe("describeValue", () => {
   it("converts undefined values inside objects to null", () => {
     expect(describeValue({ a: undefined, b: 1 })).toEqual({ a: null, b: 1 })
   })
+
+  it("converts NaN to string", () => {
+    expect(describeValue(Number.NaN)).toBe("NaN")
+  })
+
+  it("converts Infinity to string", () => {
+    expect(describeValue(Number.POSITIVE_INFINITY)).toBe("Infinity")
+    expect(describeValue(Number.NEGATIVE_INFINITY)).toBe("-Infinity")
+  })
+
+  it("converts -0 to string", () => {
+    expect(describeValue(-0)).toBe("-0")
+  })
+
+  it("converts bigint to string", () => {
+    expect(describeValue(123n)).toBe("123")
+  })
+
+  it("converts symbol to string", () => {
+    expect(describeValue(Symbol("id"))).toBe("Symbol(id)")
+  })
 })
