@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { getIo } from "../io.js"
+import { setResumed } from "../pause-state.js"
 import { relayResume } from "../relay-client.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
@@ -24,6 +25,8 @@ export function register(server: McpServer): void {
     async ({ project }) => {
       const resolved = resolveProject(project)
       if (resolved.error) return textResult(resolved.error)
+
+      setResumed(resolved.projectId ?? null)
 
       const io = getIo()
 

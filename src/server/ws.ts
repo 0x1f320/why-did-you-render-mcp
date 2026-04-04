@@ -8,6 +8,12 @@ import type {
 } from "../types.js"
 import type { IoServer } from "./io.js"
 import { setIo } from "./io.js"
+import {
+  isGloballyPaused,
+  isPaused,
+  setPaused,
+  setResumed,
+} from "./pause-state.js"
 import { store } from "./store/index.js"
 
 const RETRY_INTERVAL_MS = 3_000
@@ -16,14 +22,17 @@ function attachHandlers(io: IoServer, port: number) {
   io.on("connection", (socket) => {
     console.error(`[wdyr-mcp] browser connected (http://localhost:${port})`)
     socket.data.projectId = null
+    if (isGloballyPaused()) socket.emit("pause")
 
     socket.on("render", (payload, projectId, commitId) => {
       socket.data.projectId = projectId
+      if (isPaused(projectId)) return
       store.addRender(payload, projectId, commitId)
     })
 
     socket.on("render-batch", (payload, projectId, commitId) => {
       socket.data.projectId = projectId
+      if (isPaused(projectId)) return
       for (const report of payload) {
         store.addRender(report, projectId, commitId)
       }
@@ -32,6 +41,7 @@ function attachHandlers(io: IoServer, port: number) {
     socket.on("register", (components, projectId) => {
       socket.data.projectId = projectId
       store.setTrackedComponents(components, projectId)
+      if (isPaused(projectId)) socket.emit("pause")
     })
 
     socket.on("config", (config, projectId) => {
@@ -40,6 +50,7 @@ function attachHandlers(io: IoServer, port: number) {
     })
 
     socket.on("relay-pause", async (projectId) => {
+      setPaused(projectId ?? null)
       if (projectId) {
         const sockets = await io.fetchSockets()
         for (const s of sockets) {
@@ -51,6 +62,7 @@ function attachHandlers(io: IoServer, port: number) {
     })
 
     socket.on("relay-resume", async (projectId) => {
+      setResumed(projectId ?? null)
       if (projectId) {
         const sockets = await io.fetchSockets()
         for (const s of sockets) {
