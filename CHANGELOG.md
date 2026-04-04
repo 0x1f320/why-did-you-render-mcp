@@ -1,3 +1,10 @@
+# [1.1.0-dev.5](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.4...v1.1.0-dev.5) (2026-04-04)
+
+
+### Features
+
+* add render snapshot save and compare tools ([#51](https://github.com/0x1f320/why-did-you-render-mcp/issues/51)) ([5fb0a05](https://github.com/0x1f320/why-did-you-render-mcp/commit/5fb0a05cd80d846515083761f74c4c68da0a8fd4))
+
 # [1.1.0-dev.4](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.3...v1.1.0-dev.4) (2026-04-04)
 
 
