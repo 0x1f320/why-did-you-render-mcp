@@ -73,9 +73,24 @@ describe("describeValue", () => {
     expect(result).toContain("[MaxDepth]")
   })
 
-  it("returns class name for unknown instances", () => {
+  it("returns class object for unknown instances", () => {
     class MyComponent {}
-    expect(describeValue(new MyComponent())).toBe("[MyComponent]")
+    expect(describeValue(new MyComponent())).toEqual({
+      type: "class",
+      name: "MyComponent",
+    })
+  })
+
+  it("returns 'Promise' for promises", () => {
+    expect(describeValue(Promise.resolve())).toBe("Promise")
+  })
+
+  it("returns structured Error", () => {
+    expect(describeValue(new TypeError("oops"))).toEqual({
+      type: "Error",
+      name: "TypeError",
+      message: "oops",
+    })
   })
 
   it("converts Date to ISO string", () => {

@@ -42,7 +42,21 @@ function serialize(
         values: [...value].map((v) => serialize(v, seen, depth + 1)),
       }
     }
-    return `[${ctorName}]`
+    if (value instanceof Promise) return "Promise"
+    if (value instanceof Error)
+      return { type: "Error", name: value.name, message: value.message }
+    if (
+      typeof Node !== "undefined" &&
+      value instanceof Node &&
+      value instanceof Element
+    ) {
+      const attrs: { [key: string]: string } = {}
+      for (const attr of value.attributes) {
+        attrs[attr.name] = attr.value
+      }
+      return { type: "dom", tagName: value.tagName.toLowerCase(), attrs }
+    }
+    return { type: "class", name: ctorName }
   }
 
   const result: { [key: string]: JsonValue } = {}
