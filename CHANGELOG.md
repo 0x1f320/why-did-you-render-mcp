@@ -1,3 +1,10 @@
+# [1.0.0-dev.14](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.13...v1.0.0-dev.14) (2026-04-04)
+
+
+### Features
+
+* add get_tracked_components tool ([#36](https://github.com/0x1f320/why-did-you-render-mcp/issues/36)) ([4deba42](https://github.com/0x1f320/why-did-you-render-mcp/commit/4deba42570702b6b79ea448679a88a5c02e4ac6a))
+
 # [1.0.0-dev.13](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0-dev.12...v1.0.0-dev.13) (2026-04-04)
 
 
