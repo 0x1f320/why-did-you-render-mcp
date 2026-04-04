@@ -8,7 +8,7 @@ import {
 } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
-import type { RenderReport } from "../../types.js"
+import type { RenderReport, WdyrConfig } from "../../types.js"
 import type {
   BufferMeta,
   CommitInfo,
@@ -37,6 +37,7 @@ export class RenderStore {
   private readonly dicts = new Map<string, ValueDict>()
   private readonly bufferMeta = new Map<string, BufferMeta>()
   private readonly trackedComponents = new Map<string, string[]>()
+  private readonly wdyrConfigs = new Map<string, WdyrConfig>()
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -378,6 +379,25 @@ export class RenderStore {
       ]
       const registered = this.trackedComponents.get(proj) ?? []
       result[proj] = { registered, observed }
+    }
+
+    return result
+  }
+
+  setWdyrConfig(config: WdyrConfig, projectId: string): void {
+    this.wdyrConfigs.set(projectId, config)
+  }
+
+  getWdyrConfig(projectId?: string): Record<string, WdyrConfig> {
+    const result: Record<string, WdyrConfig> = {}
+
+    if (projectId) {
+      const config = this.wdyrConfigs.get(projectId)
+      if (config) result[projectId] = config
+    } else {
+      for (const [proj, config] of this.wdyrConfigs) {
+        result[proj] = config
+      }
     }
 
     return result
