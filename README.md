@@ -1,5 +1,9 @@
 # why-did-you-render-mcp
 
+[![npm version](https://img.shields.io/npm/v/@0x1f320.sh/why-did-you-render-mcp.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp)
+[![CI](https://img.shields.io/github/actions/workflow/status/0x1f320/why-did-you-render-mcp/ci.yml?style=flat&colorA=000000&colorB=000000)](https://github.com/0x1f320/why-did-you-render-mcp/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/@0x1f320.sh/why-did-you-render-mcp?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp)
+
 An [MCP](https://modelcontextprotocol.io/) server that bridges [why-did-you-render](https://github.com/welldone-software/why-did-you-render) data from the browser to coding agents. It captures unnecessary React re-render reports in real time and exposes them as MCP tools, so agents can diagnose and fix performance issues without manual browser inspection.
 
 ## How It Works
