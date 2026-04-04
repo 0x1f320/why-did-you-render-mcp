@@ -7,5 +7,10 @@ export function readJsonl(file: string): StoredRender[] {
   return readFileSync(file, "utf-8")
     .split("\n")
     .filter(Boolean)
-    .map((line) => JSON.parse(line) as StoredRender)
+    .map((line) => {
+      const parsed = JSON.parse(line) as StoredRender
+      parsed.timestamp ??= 0
+      parsed.commitId ??= 0
+      return parsed
+    })
 }

@@ -9,13 +9,17 @@ import {
 import { homedir } from "node:os"
 import { join } from "node:path"
 import type { RenderReport } from "../../types.js"
-import type { RenderWithProject, StoredRender } from "./types.js"
+import type { CommitSummary, RenderWithProject, StoredRender } from "./types.js"
 import { readJsonl } from "./utils/read-jsonl.js"
 import { sanitizeProjectId } from "./utils/sanitize-project-id.js"
 import { toResult } from "./utils/to-result.js"
 
+const COMMIT_GAP_MS = 200
+
 export class RenderStore {
   private readonly dir: string
+  private commitId = 0
+  private lastRenderTime = 0
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -23,7 +27,18 @@ export class RenderStore {
   }
 
   addRender(report: RenderReport, projectId: string): void {
-    const stored: StoredRender = { ...report, projectId }
+    const now = Date.now()
+    if (now - this.lastRenderTime > COMMIT_GAP_MS) {
+      this.commitId++
+    }
+    this.lastRenderTime = now
+
+    const stored: StoredRender = {
+      ...report,
+      projectId,
+      timestamp: now,
+      commitId: this.commitId,
+    }
     appendFileSync(this.projectFile(projectId), `${JSON.stringify(stored)}\n`)
   }
 
@@ -81,6 +96,54 @@ export class RenderStore {
     }
 
     return summary
+  }
+
+  getCommits(projectId?: string): CommitSummary[] {
+    const renders = this.getAllRenders(projectId)
+    const map = new Map<
+      number,
+      {
+        timestamp: number
+        project: string
+        components: Set<string>
+        count: number
+      }
+    >()
+
+    for (const r of renders) {
+      let entry = map.get(r.commitId)
+      if (!entry) {
+        entry = {
+          timestamp: r.timestamp,
+          project: r.project,
+          components: new Set(),
+          count: 0,
+        }
+        map.set(r.commitId, entry)
+      }
+      entry.components.add(r.displayName)
+      entry.count++
+    }
+
+    const commits: CommitSummary[] = []
+    for (const [commitId, entry] of map) {
+      commits.push({
+        commitId,
+        timestamp: entry.timestamp,
+        project: entry.project,
+        renderCount: entry.count,
+        components: [...entry.components],
+      })
+    }
+
+    return commits
+  }
+
+  getRendersByCommit(
+    commitId: number,
+    projectId?: string,
+  ): RenderWithProject[] {
+    return this.getAllRenders(projectId).filter((r) => r.commitId === commitId)
   }
 
   private projectFile(projectId: string): string {

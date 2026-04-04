@@ -14,12 +14,16 @@ describe("toResult", () => {
       projectId: "http://localhost:3000",
       displayName: "App",
       reason: baseReason,
+      timestamp: 1000,
+      commitId: 1,
     }
 
     expect(toResult(stored)).toEqual({
       project: "http://localhost:3000",
       displayName: "App",
       reason: baseReason,
+      timestamp: 1000,
+      commitId: 1,
     })
   })
 
@@ -29,6 +33,8 @@ describe("toResult", () => {
       displayName: "Counter",
       reason: baseReason,
       hookName: "useState",
+      timestamp: 1000,
+      commitId: 1,
     }
 
     const result = toResult(stored)
@@ -41,8 +47,22 @@ describe("toResult", () => {
       displayName: "App",
       reason: baseReason,
       hookName: undefined,
+      timestamp: 1000,
+      commitId: 1,
     }
 
     expect(toResult(stored)).not.toHaveProperty("hookName")
+  })
+
+  it("defaults timestamp and commitId to 0 for legacy data", () => {
+    const stored = {
+      projectId: "http://localhost:3000",
+      displayName: "App",
+      reason: baseReason,
+    } as StoredRender
+
+    const result = toResult(stored)
+    expect(result.timestamp).toBe(0)
+    expect(result.commitId).toBe(0)
   })
 })

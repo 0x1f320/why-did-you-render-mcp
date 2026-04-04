@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { RenderReport } from "../../types.js"
 import { RenderStore } from "./render-store.js"
 
@@ -127,5 +127,98 @@ describe("RenderStore", () => {
 
     const summary = store.getSummary("http://localhost:3000")
     expect(Object.keys(summary)).toEqual(["http://localhost:3000"])
+  })
+
+  it("assigns timestamp to renders", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000")
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    expect(renders[0].timestamp).toBeGreaterThan(0)
+  })
+
+  it("assigns commitId to renders", () => {
+    store.addRender(makeReport("App"), "http://localhost:3000")
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    expect(renders[0].commitId).toBe(1)
+  })
+
+  it("groups renders within 200ms into the same commit", () => {
+    const now = Date.now()
+    vi.spyOn(Date, "now").mockReturnValue(now)
+
+    store.addRender(makeReport("App"), "http://localhost:3000")
+    store.addRender(makeReport("Header"), "http://localhost:3000")
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    expect(renders[0].commitId).toBe(renders[1].commitId)
+
+    vi.restoreAllMocks()
+  })
+
+  it("creates new commit after 200ms gap", () => {
+    const now = Date.now()
+    vi.spyOn(Date, "now")
+      .mockReturnValueOnce(now)
+      .mockReturnValueOnce(now + 300)
+
+    store.addRender(makeReport("App"), "http://localhost:3000")
+    store.addRender(makeReport("Header"), "http://localhost:3000")
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    expect(renders[0].commitId).not.toBe(renders[1].commitId)
+
+    vi.restoreAllMocks()
+  })
+
+  it("returns commit summaries via getCommits", () => {
+    const now = Date.now()
+    vi.spyOn(Date, "now")
+      .mockReturnValueOnce(now)
+      .mockReturnValueOnce(now)
+      .mockReturnValueOnce(now + 300)
+
+    store.addRender(makeReport("App"), "http://localhost:3000")
+    store.addRender(makeReport("Header"), "http://localhost:3000")
+    store.addRender(makeReport("App"), "http://localhost:3000")
+
+    const commits = store.getCommits("http://localhost:3000")
+    expect(commits).toHaveLength(2)
+
+    expect(commits[0].renderCount).toBe(2)
+    expect(commits[0].components).toContain("App")
+    expect(commits[0].components).toContain("Header")
+    expect(commits[0].timestamp).toBe(now)
+
+    expect(commits[1].renderCount).toBe(1)
+    expect(commits[1].components).toEqual(["App"])
+
+    vi.restoreAllMocks()
+  })
+
+  it("returns empty commits when no renders exist", () => {
+    expect(store.getCommits("http://localhost:3000")).toEqual([])
+  })
+
+  it("filters renders by commitId via getRendersByCommit", () => {
+    const now = Date.now()
+    vi.spyOn(Date, "now")
+      .mockReturnValueOnce(now)
+      .mockReturnValueOnce(now + 300)
+
+    store.addRender(makeReport("App"), "http://localhost:3000")
+    store.addRender(makeReport("Header"), "http://localhost:3000")
+
+    const renders = store.getAllRenders("http://localhost:3000")
+    const firstCommitId = renders[0].commitId
+
+    const byCommit = store.getRendersByCommit(
+      firstCommitId,
+      "http://localhost:3000",
+    )
+    expect(byCommit).toHaveLength(1)
+    expect(byCommit[0].displayName).toBe("App")
+
+    vi.restoreAllMocks()
   })
 })
