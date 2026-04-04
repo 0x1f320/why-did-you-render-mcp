@@ -5,19 +5,37 @@ An MCP (Model Context Protocol) server that bridges [why-did-you-render](https:/
 ## Architecture
 
 ```
-Browser (React app)          MCP Server              Coding Agent
-┌──────────────────┐   WS   ┌──────────────┐  stdio  ┌──────────┐
-│ wdyr + client lib│───────▸│ ws → store   │◀───────▸│ Claude,  │
-│                  │ :4649  │ MCP tools    │         │ Cursor…  │
-└──────────────────┘        └──────────────┘         └──────────┘
+Browser (project-a) ──┐
+Browser (project-b) ──┤
+                      ▼
+                MCP #1 → WS(:4649) ✅ (first instance binds)
+                MCP #2 → WS(:4649) ❌ → skip (EADDRINUSE)
+                      │
+                      ▼
+               ~/.wdyr-mcp/renders/  (JSONL files, shared across instances)
+               ├─ http___localhost_3000.jsonl
+               └─ http___localhost_5173.jsonl
 ```
 
-- **Client** (`src/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket.
-- **Server** (`src/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, stores render reports in memory, and exposes them via MCP tools over stdio.
-  - `ws.ts` — WebSocket server that receives render reports from the browser client.
-  - `store.ts` — In-memory store for render reports with query/clear operations.
-  - `tools.ts` — Registers MCP tools: `get_unnecessary_renders`, `get_render_summary`, `clear_renders`.
+- **Multiple MCP instances** can run simultaneously. Only the first instance binds the WebSocket server; others gracefully skip via EADDRINUSE handling. All instances read/write the same JSONL files.
+- **Multi-project support** — Each project is identified by the browser's `location.origin` (e.g. `http://localhost:3000`). Render data is stored in per-project JSONL files under `~/.wdyr-mcp/renders/`.
+- **Project disambiguation** — When only one project exists, tools auto-select it. When multiple exist, tools return a message instructing the agent to ask the user for their dev server URL.
+
+### Components
+
+- **Client** (`src/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket. Auto-tags messages with `location.origin` as the project identifier.
+- **Server** (`src/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, persists render reports to JSONL files, and exposes them via MCP tools over stdio.
+  - `ws.ts` — WebSocket server with EADDRINUSE graceful handling.
+  - `store/` — `RenderStore` class backed by JSONL files in `~/.wdyr-mcp/renders/`.
+  - `tools/` — One file per MCP tool: `get-unnecessary-renders`, `get-render-summary`, `get-projects`, `clear-renders`.
 - **Types** (`src/types.ts`) — Shared type definitions including `RenderReport`, `SafeReasonForUpdate`, and `WsMessage`.
+
+### Design Decisions
+
+- **JSONL over SQLite** — Render data is ephemeral and the access pattern is simple (append, read all, filter, clear). JSONL avoids native addon dependencies (better-sqlite3) and migration complexity while supporting concurrent multi-process read/write.
+- **No daemon process** — Instead of a separate long-running daemon managing shared state, each MCP instance is independent. The WS server is opportunistically claimed by whichever instance starts first; data sharing happens through the filesystem.
+- **Project ID from `location.origin`** — The browser's origin is used as the project identifier because it's auto-available (zero config for the user) and unique per dev server. The MCP server doesn't need to know the project ID upfront — tools query the JSONL store and disambiguate as needed.
+- **One file per function** — Tools and utilities are split into individual files (`tools/<tool-name>.ts`, `store/utils/<fn-name>.ts`) for clarity. Each file has a single responsibility.
 
 ## Tech Stack
 
@@ -27,6 +45,7 @@ Browser (React app)          MCP Server              Coding Agent
 - **Package Manager**: pnpm
 - **Linter/Formatter**: Biome (tabs, recommended rules)
 - **Protocol**: MCP SDK (`@modelcontextprotocol/sdk`), WebSocket (`ws`)
+- **Storage**: JSONL files (`~/.wdyr-mcp/renders/`)
 
 ## Commands
 
@@ -34,6 +53,35 @@ Browser (React app)          MCP Server              Coding Agent
 - `pnpm dev` — Watch mode build
 - `pnpm check` — Lint and format check (Biome)
 - `pnpm check:fix` — Auto-fix lint and format issues
+
+## Project Structure
+
+```
+src/
+├── client/
+│   └── index.ts                    # Browser client (WS + sanitization)
+├── server/
+│   ├── index.ts                    # Entry point (MCP + WS server init)
+│   ├── ws.ts                       # WebSocket server (EADDRINUSE handling)
+│   ├── store/
+│   │   ├── index.ts                # RenderStore export + singleton
+│   │   ├── render-store.ts         # RenderStore class
+│   │   ├── types.ts                # StoredRender, RenderWithProject
+│   │   └── utils/
+│   │       ├── read-jsonl.ts       # JSONL file parser
+│   │       ├── sanitize-project-id.ts
+│   │       └── to-result.ts        # StoredRender → RenderWithProject
+│   └── tools/
+│       ├── index.ts                # registerTools barrel
+│       ├── get-unnecessary-renders.ts
+│       ├── get-render-summary.ts
+│       ├── get-projects.ts
+│       ├── clear-renders.ts
+│       └── utils/
+│           ├── resolve-project.ts  # Auto-select or disambiguate project
+│           └── text-result.ts      # MCP text response helper
+└── types.ts                        # Shared types (RenderReport, WsMessage)
+```
 
 ## Git Workflow
 
