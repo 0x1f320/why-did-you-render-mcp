@@ -2,11 +2,18 @@ import type { UpdateInfo } from "@welldone-software/why-did-you-render"
 
 export type { UpdateInfo } from "@welldone-software/why-did-you-render"
 
+export interface FunctionValue {
+  type: "function"
+  name: string
+}
+
+export type SafeValue = string | FunctionValue
+
 export interface SafeHookDifference {
   pathString: string
   diffType: string
-  prevValue: string
-  nextValue: string
+  prevValue: SafeValue
+  nextValue: SafeValue
 }
 
 export interface SafeReasonForUpdate {

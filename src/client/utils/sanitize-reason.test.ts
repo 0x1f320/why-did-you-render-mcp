@@ -29,8 +29,8 @@ describe("sanitizeReason", () => {
       {
         pathString: "onClick",
         diffType: "function",
-        prevValue: "[Function: old]",
-        nextValue: "[Function: next]",
+        prevValue: { type: "function", name: "old" },
+        nextValue: { type: "function", name: "next" },
       },
     ])
     expect(result.stateDifferences).toBe(false)

@@ -25,8 +25,8 @@ describe("sanitizeDifferences", () => {
       {
         pathString: "onClick",
         diffType: "deepEquals",
-        prevValue: "[Function: handler]",
-        nextValue: "[Function: anon]",
+        prevValue: { type: "function", name: "handler" },
+        nextValue: { type: "function", name: "anon" },
       },
     ])
   })

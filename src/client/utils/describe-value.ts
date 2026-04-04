@@ -56,11 +56,13 @@ function serialize(
   return result
 }
 
-export function describeValue(value: unknown): string {
+export function describeValue(
+  value: unknown,
+): string | { type: "function"; name: string } {
   if (value === null) return "null"
   if (value === undefined) return "undefined"
   if (typeof value === "function")
-    return `[Function: ${value.name || "anonymous"}]`
+    return { type: "function", name: value.name || "anonymous" }
   if (typeof value !== "object") return String(value)
 
   const serialized = serialize(value, new WeakSet(), 0)

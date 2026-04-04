@@ -10,13 +10,16 @@ describe("describeValue", () => {
     expect(describeValue(undefined)).toBe("undefined")
   })
 
-  it("describes named functions", () => {
+  it("returns function object for named functions", () => {
     function myFunc() {}
-    expect(describeValue(myFunc)).toBe("[Function: myFunc]")
+    expect(describeValue(myFunc)).toEqual({ type: "function", name: "myFunc" })
   })
 
-  it("describes anonymous functions", () => {
-    expect(describeValue(() => {})).toBe("[Function: anonymous]")
+  it("returns function object for anonymous functions", () => {
+    expect(describeValue(() => {})).toEqual({
+      type: "function",
+      name: "anonymous",
+    })
   })
 
   it("describes primitives", () => {
