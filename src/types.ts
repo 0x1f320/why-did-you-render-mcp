@@ -21,9 +21,16 @@ export interface RenderReport {
   hookName?: string
 }
 
-export type WsMessage = {
-  type: "render"
-  payload: RenderReport
-  projectId?: string
-  commitId?: number
-}
+export type WsMessage =
+  | {
+      type: "render"
+      payload: RenderReport
+      projectId?: string
+      commitId?: number
+    }
+  | {
+      type: "render-batch"
+      payload: RenderReport[]
+      projectId?: string
+      commitId?: number
+    }

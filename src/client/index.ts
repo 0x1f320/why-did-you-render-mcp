@@ -1,4 +1,4 @@
-import type { UpdateInfo, WsMessage } from "../types.js"
+import type { RenderReport, UpdateInfo, WsMessage } from "../types.js"
 import { sanitizeReason } from "./utils/sanitize-reason.js"
 
 interface DevToolsHook {
@@ -78,18 +78,41 @@ export function buildOptions(opts?: ClientOptions) {
     }
   }
 
+  let pendingBatch: { commitId: number; reports: RenderReport[] } | null = null
+  let flushScheduled = false
+
+  function flushBatch() {
+    flushScheduled = false
+    if (!pendingBatch || pendingBatch.reports.length === 0) return
+
+    send({
+      type: "render-batch",
+      projectId,
+      commitId: pendingBatch.commitId,
+      payload: pendingBatch.reports,
+    })
+    pendingBatch = null
+  }
+
   return {
     notifier(info: UpdateInfo) {
-      send({
-        type: "render",
-        projectId,
-        commitId,
-        payload: {
-          displayName: info.displayName,
-          reason: sanitizeReason(info.reason),
-          hookName: info.hookName,
-        },
-      })
+      const report: RenderReport = {
+        displayName: info.displayName,
+        reason: sanitizeReason(info.reason),
+        hookName: info.hookName,
+      }
+
+      if (pendingBatch && pendingBatch.commitId === commitId) {
+        pendingBatch.reports.push(report)
+      } else {
+        if (pendingBatch) flushBatch()
+        pendingBatch = { commitId, reports: [report] }
+      }
+
+      if (!flushScheduled) {
+        flushScheduled = true
+        queueMicrotask(flushBatch)
+      }
     },
   }
 }

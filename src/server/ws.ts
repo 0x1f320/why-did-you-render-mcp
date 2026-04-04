@@ -30,10 +30,15 @@ export function createWsServer(port: number): WebSocketServer | null {
     ws.on("message", (raw) => {
       try {
         const msg: WsMessage = JSON.parse(String(raw))
+        const projectId = msg.projectId ?? "default"
+        heartbeat.setProjectId(ws, projectId)
+
         if (msg.type === "render") {
-          const projectId = msg.projectId ?? "default"
-          heartbeat.setProjectId(ws, projectId)
           store.addRender(msg.payload, projectId, msg.commitId)
+        } else if (msg.type === "render-batch") {
+          for (const report of msg.payload) {
+            store.addRender(report, projectId, msg.commitId)
+          }
         }
       } catch {
         console.error("[wdyr-mcp] invalid message received")
