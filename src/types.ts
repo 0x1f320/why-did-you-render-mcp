@@ -7,16 +7,46 @@ export interface FunctionValue {
   name: string
 }
 
-export type JsonValue =
+export interface ClassValue {
+  type: "class"
+  name: string
+}
+
+export interface DomValue {
+  type: "dom"
+  tagName: string
+  attrs: { [key: string]: string }
+}
+
+export interface ErrorValue {
+  type: "Error"
+  name: string
+  message: string
+}
+
+export interface MapValue {
+  type: "Map"
+  entries: { [key: string]: SafeValue }
+}
+
+export interface SetValue {
+  type: "Set"
+  values: SafeValue[]
+}
+
+export type SafeValue =
   | string
   | number
   | boolean
   | null
   | FunctionValue
-  | JsonValue[]
-  | { [key: string]: JsonValue }
-
-export type SafeValue = JsonValue
+  | ClassValue
+  | DomValue
+  | ErrorValue
+  | MapValue
+  | SetValue
+  | SafeValue[]
+  | { [key: string]: SafeValue }
 
 export interface SafeHookDifference {
   pathString: string

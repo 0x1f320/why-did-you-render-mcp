@@ -1,4 +1,4 @@
-import type { JsonValue } from "../../types.js"
+import type { SafeValue } from "../../types.js"
 
 const MAX_DEPTH = 8
 
@@ -6,7 +6,7 @@ function serialize(
   value: unknown,
   seen: WeakSet<object>,
   depth: number,
-): JsonValue {
+): SafeValue {
   if (value === null) return null
   if (value === undefined) return null
   if (typeof value === "function")
@@ -30,7 +30,7 @@ function serialize(
     if (value instanceof Date) return value.toISOString()
     if (value instanceof RegExp) return String(value)
     if (value instanceof Map) {
-      const entries: { [key: string]: JsonValue } = {}
+      const entries: { [key: string]: SafeValue } = {}
       for (const [k, v] of value.entries()) {
         entries[String(k)] = serialize(v, seen, depth + 1)
       }
@@ -59,7 +59,7 @@ function serialize(
     return { type: "class", name: ctorName }
   }
 
-  const result: { [key: string]: JsonValue } = {}
+  const result: { [key: string]: SafeValue } = {}
   for (const key of Object.keys(value as Record<string, unknown>)) {
     result[key] = serialize(
       (value as Record<string, unknown>)[key],
@@ -70,6 +70,6 @@ function serialize(
   return result
 }
 
-export function describeValue(value: unknown): JsonValue {
+export function describeValue(value: unknown): SafeValue {
   return serialize(value, new WeakSet(), 0)
 }
