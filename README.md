@@ -162,14 +162,34 @@ Once both the MCP server and your React dev server are running, interact with yo
 
 | Tool | Description |
 | --- | --- |
-| `get_unnecessary_renders` | Returns all captured unnecessary re-renders. Optionally filter by `component` name. |
+| `get_renders` | Returns all captured unnecessary re-renders, including stack traces. Optionally filter by `component` name. |
 | `get_render_summary` | Returns a summary of re-renders grouped by component with counts. |
 | `get_commits` | Lists React commit IDs that have recorded render data. Use these IDs with `get_renders_by_commit`. |
-| `get_renders_by_commit` | Returns all unnecessary re-renders for a specific React commit ID. |
+| `get_renders_by_commit` | Returns all unnecessary re-renders for a specific React commit ID, including stack traces. |
+| `get_tracked_components` | Lists components currently tracked by why-did-you-render. |
 | `get_projects` | Lists all active projects (identified by their origin URL). |
 | `clear_renders` | Clears all stored render data. Optionally scope to a specific project. |
 
 When multiple projects are active, tools accept an optional `project` parameter (the browser's origin URL, e.g. `http://localhost:3000`). If omitted and only one project exists, it is auto-selected.
+
+### Stack traces
+
+Each render report includes a `stackFrames` array that traces the hook chain and component tree that triggered the re-render. The client captures a stack trace on every render update, parses it with `error-stack-parser`, filters out React/WDYR internals, and resolves bundled locations back to original source files via source maps.
+
+Each frame has the following structure:
+
+```ts
+{
+  type: "hook" | "component",  // "hook" for names starting with `use`, otherwise "component"
+  name: string,                // e.g. "useFilter", "Dashboard"
+  location: {
+    path: string,              // source file path (source-mapped when available)
+    line: number,              // line number in the source file
+  },
+}
+```
+
+Agents can use `stackFrames` to pinpoint the exact source location of each unnecessary re-render — navigating directly to the file and line that caused it, without requiring manual browser inspection.
 
 ### Commit-level grouping
 
