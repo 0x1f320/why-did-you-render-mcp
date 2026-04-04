@@ -10,7 +10,7 @@ export function register(server: McpServer): void {
     {
       title: "Get Renders by Commit",
       description:
-        "Returns all re-renders for a specific React commit ID. Use get_commits first to discover available commit IDs.",
+        "Returns all re-renders for a specific React commit ID, including stack traces that show the hook chain and component tree that triggered each render. Use the stackFrames field to locate the exact source file and line. Use get_commits first to discover available commit IDs.",
       inputSchema: {
         commitId: z.number().describe("The React commit ID to filter by."),
         component: z
