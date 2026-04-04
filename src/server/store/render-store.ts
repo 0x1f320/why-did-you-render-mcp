@@ -75,7 +75,8 @@ export class RenderStore {
     const summary: Record<string, Record<string, number>> = {}
 
     for (const r of renders) {
-      const project = (summary[r.project] ??= {})
+      summary[r.project] ??= {}
+      const project = summary[r.project]
       project[r.displayName] = (project[r.displayName] ?? 0) + 1
     }
 
