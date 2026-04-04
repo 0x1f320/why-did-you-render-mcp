@@ -1,3 +1,10 @@
+# [1.1.0-dev.4](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.3...v1.1.0-dev.4) (2026-04-04)
+
+
+### Features
+
+* enforce pause state on server side ([#50](https://github.com/0x1f320/why-did-you-render-mcp/issues/50)) ([71d56c7](https://github.com/0x1f320/why-did-you-render-mcp/commit/71d56c793e2b37312cc999fc523d62f7fc05be36))
+
 # [1.1.0-dev.3](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.2...v1.1.0-dev.3) (2026-04-04)
 
 
