@@ -1,46 +1,44 @@
 {
-	"name": "@0x1f320.sh/why-did-you-render-mcp",
-	"version": "0.0.0",
-	"type": "module",
-	"description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
-	"license": "MIT",
-	"author": {
-		"name": "0x1F320",
-		"email": "me@0x1f320.sh",
-		"url": "https://0x1f320.sh"
-	},
-	"bin": {
-		"why-did-you-render-mcp": "./dist/server/index.js"
-	},
-	"exports": {
-		".": "./dist/server/index.js",
-		"./client": "./dist/client/index.js"
-	},
-	"files": [
-		"dist"
-	],
-	"scripts": {
-		"build": "tsdown",
-		"dev": "tsdown --watch",
-		"check": "biome check .",
-		"check:fix": "biome check --fix .",
-		"typecheck": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.12.1",
-		"ws": "^8.18.0",
-		"zod": "^3.24.4"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@types/node": "^22.14.1",
-		"@types/ws": "^8.18.0",
-		"tsdown": "^0.12.4",
-		"typescript": "^5.8.3"
-	},
-	"peerDependencies": {
-		"@welldone-software/why-did-you-render": "^10.0.1"
-	},
-	"packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
-	"pnpm": {}
+  "name": "@0x1f320.sh/why-did-you-render-mcp",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
+  "license": "MIT",
+  "author": {
+    "name": "0x1F320",
+    "email": "me@0x1f320.sh",
+    "url": "https://0x1f320.sh"
+  },
+  "bin": {
+    "why-did-you-render-mcp": "./dist/server/index.js"
+  },
+  "exports": {
+    ".": "./dist/server/index.js",
+    "./client": "./dist/client/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "check": "biome check .",
+    "check:fix": "biome check --fix .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "ws": "^8.18.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.14.1",
+    "@types/ws": "^8.18.0",
+    "tsdown": "^0.12.4",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@welldone-software/why-did-you-render": "^10.0.1"
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
+  "pnpm": {}
 }

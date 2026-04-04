@@ -1,27 +1,27 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTools } from "./tools/index.js";
-import { createWsServer } from "./ws.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
+import { registerTools } from "./tools/index.js"
+import { createWsServer } from "./ws.js"
 
-const DEFAULT_WS_PORT = 4649;
+const DEFAULT_WS_PORT = 4649
 
 const server = new McpServer({
-	name: "why-did-you-render",
-	version: "0.0.0",
-});
+  name: "why-did-you-render",
+  version: "0.0.0",
+})
 
-registerTools(server);
+registerTools(server)
 
 async function main() {
-	const port = Number(process.env.WDYR_WS_PORT) || DEFAULT_WS_PORT;
-	createWsServer(port);
+  const port = Number(process.env.WDYR_WS_PORT) || DEFAULT_WS_PORT
+  createWsServer(port)
 
-	const transport = new StdioServerTransport();
-	await server.connect(transport);
-	console.error("[wdyr-mcp] MCP server running on stdio");
+  const transport = new StdioServerTransport()
+  await server.connect(transport)
+  console.error("[wdyr-mcp] MCP server running on stdio")
 }
 
 main().catch((error) => {
-	console.error("[wdyr-mcp] Fatal error:", error);
-	process.exit(1);
-});
+  console.error("[wdyr-mcp] Fatal error:", error)
+  process.exit(1)
+})
