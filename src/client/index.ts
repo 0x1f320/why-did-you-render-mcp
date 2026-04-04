@@ -19,6 +19,12 @@ interface DevToolsHook {
 
 declare global {
   var __REACT_DEVTOOLS_GLOBAL_HOOK__: DevToolsHook | undefined
+  interface ImportMeta {
+    hot?: {
+      on(event: string, cb: (...args: unknown[]) => void): void
+      accept(): void
+    }
+  }
 }
 
 const DEFAULT_URL = "http://localhost:4649"
@@ -147,6 +153,27 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
     paused = false
     log("Render collection resumed")
   })
+
+  try {
+    if (import.meta.hot) {
+      import.meta.hot.on("vite:afterUpdate", () => {
+        socket.emit("hmr", projectId)
+      })
+    }
+  } catch {}
+
+  try {
+    // biome-ignore lint/suspicious/noExplicitAny: Webpack HMR types are not available
+    const m = typeof module !== "undefined" ? (module as any) : undefined
+    if (m?.hot) {
+      m.hot.accept()
+      m.hot.status((status: string) => {
+        if (status === "idle") {
+          socket.emit("hmr", projectId)
+        }
+      })
+    }
+  } catch {}
 
   interface PendingItem {
     info: UpdateInfo

@@ -61,6 +61,11 @@ function attachHandlers(io: IoServer, port: number) {
       }
     })
 
+    socket.on("hmr", (projectId) => {
+      socket.data.projectId = projectId
+      store.recordHmr(projectId)
+    })
+
     socket.on("relay-resume", async (projectId) => {
       setResumed(projectId ?? null)
       if (projectId) {

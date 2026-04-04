@@ -12,6 +12,7 @@ import { register as listSnapshots } from "./list-snapshots.js"
 import { register as pauseRenders } from "./pause-renders.js"
 import { register as resumeRenders } from "./resume-renders.js"
 import { register as saveSnapshot } from "./save-snapshot.js"
+import { register as waitForRenders } from "./wait-for-renders.js"
 
 export function registerTools(server: McpServer): void {
   getRenders(server)
@@ -27,4 +28,5 @@ export function registerTools(server: McpServer): void {
   listSnapshots(server)
   compareSnapshots(server)
   deleteSnapshot(server)
+  waitForRenders(server)
 }

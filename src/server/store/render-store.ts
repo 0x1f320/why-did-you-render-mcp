@@ -39,6 +39,7 @@ export class RenderStore {
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly dicts = new Map<string, ValueDict>()
   private readonly bufferMeta = new Map<string, BufferMeta>()
+  private readonly hmrTimestamps = new Map<string, number>()
   private readonly trackedComponents = new Map<string, string[]>()
   private readonly wdyrConfigs = new Map<string, WdyrConfig>()
 
@@ -448,6 +449,20 @@ export class RenderStore {
     if (!existsSync(file)) return false
     unlinkSync(file)
     return true
+  }
+
+  recordHmr(projectId: string): void {
+    this.hmrTimestamps.set(projectId, Date.now())
+  }
+
+  getLastHmrTimestamp(projectId: string): number | null {
+    return this.hmrTimestamps.get(projectId) ?? null
+  }
+
+  getRendersSince(timestamp: number, projectId?: string): RenderWithProject[] {
+    return this.getAllRenders(projectId).filter(
+      (r) => r.timestamp != null && r.timestamp > timestamp,
+    )
   }
 
   private rewriteFile(filePath: string, renders: StoredRender[]): void {
