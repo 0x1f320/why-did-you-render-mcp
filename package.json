@@ -34,9 +34,7 @@
       "require": "./dist/client/index.cjs"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -56,6 +54,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^22.14.1",
     "@types/ws": "^8.18.0",
