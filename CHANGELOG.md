@@ -1,3 +1,10 @@
+# [1.1.0-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.1-dev.1...v1.1.0-dev.1) (2026-04-04)
+
+
+### Features
+
+* add pause/resume render collection tools ([#47](https://github.com/0x1f320/why-did-you-render-mcp/issues/47)) ([01fc993](https://github.com/0x1f320/why-did-you-render-mcp/commit/01fc993279fad4864951e91149fb00ec69bb2417))
+
 ## [1.0.1-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0...v1.0.1-dev.1) (2026-04-04)
 
 
