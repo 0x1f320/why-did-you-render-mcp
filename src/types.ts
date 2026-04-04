@@ -114,6 +114,7 @@ export interface ClientToServerEvents {
   config: (config: WdyrConfig, projectId: string) => void
   "relay-pause": (projectId?: string) => void
   "relay-resume": (projectId?: string) => void
+  hmr: (projectId: string) => void
 }
 
 export interface ServerToClientEvents {
