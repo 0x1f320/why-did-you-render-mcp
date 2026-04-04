@@ -7,6 +7,11 @@ export interface StoredRender extends RenderReport {
 
 export type BufferMeta = Pick<StoredRender, "projectId" | "commitId">
 
+export interface ParsedFilename {
+  projectSanitized: string
+  commitId?: number
+}
+
 export interface RenderWithProject extends RenderReport {
   project: string
   commitId?: number

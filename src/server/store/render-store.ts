@@ -9,7 +9,12 @@ import {
 import { homedir } from "node:os"
 import { join } from "node:path"
 import type { RenderReport } from "../../types.js"
-import type { BufferMeta, RenderWithProject, StoredRender } from "./types.js"
+import type {
+  BufferMeta,
+  ParsedFilename,
+  RenderWithProject,
+  StoredRender,
+} from "./types.js"
 import { readJsonl } from "./utils/read-jsonl.js"
 import { sanitizeProjectId } from "./utils/sanitize-project-id.js"
 import { toResult } from "./utils/to-result.js"
@@ -276,9 +281,7 @@ export class RenderStore {
     )
   }
 
-  private parseFilename(
-    filename: string,
-  ): { projectSanitized: string; commitId?: number } | null {
+  private parseFilename(filename: string): ParsedFilename | null {
     if (!filename.endsWith(".jsonl")) return null
     const base = filename.slice(0, -".jsonl".length)
 
