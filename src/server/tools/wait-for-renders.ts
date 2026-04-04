@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { store } from "../store/index.js"
+import { registry, store } from "../store/index.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
 
@@ -56,7 +56,7 @@ export function register(server: McpServer): void {
           const elapsed = Date.now() - waitStart
 
           if (resolved.projectId) {
-            const hmrTs = store.getLastHmrTimestamp(resolved.projectId)
+            const hmrTs = registry.getLastHmrTimestamp(resolved.projectId)
             if (hmrTs != null && hmrTs >= waitStart) {
               hmrDetected = true
             }

@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { store } from "../store/index.js"
+import { snapshots, store, summarize } from "../store/index.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
 
@@ -27,7 +27,7 @@ export function register(server: McpServer): void {
       const resolved = resolveProject(project)
       if (resolved.error) return textResult(resolved.error)
 
-      store.saveSnapshot(name, resolved.projectId)
+      snapshots.save(name, summarize(store.getAllRenders(resolved.projectId)))
       return textResult(`Snapshot "${name}" saved.`)
     },
   )

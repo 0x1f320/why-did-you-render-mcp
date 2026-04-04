@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
-import { store } from "../store/index.js"
+import { snapshots } from "../store/index.js"
 import { textResult } from "./utils/text-result.js"
 
 export function register(server: McpServer): void {
@@ -11,13 +11,13 @@ export function register(server: McpServer): void {
       inputSchema: {},
     },
     async () => {
-      const snapshots = store.listSnapshots()
+      const list = snapshots.list()
 
-      if (snapshots.length === 0) {
+      if (list.length === 0) {
         return textResult("No snapshots saved yet.")
       }
 
-      const lines = snapshots.map(
+      const lines = list.map(
         (s) => `- ${s.name} (${new Date(s.timestamp).toISOString()})`,
       )
       return textResult(`Saved snapshots:\n\n${lines.join("\n")}`)

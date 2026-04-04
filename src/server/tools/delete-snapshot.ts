@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { store } from "../store/index.js"
+import { snapshots } from "../store/index.js"
 import { textResult } from "./utils/text-result.js"
 
 export function register(server: McpServer): void {
@@ -14,7 +14,7 @@ export function register(server: McpServer): void {
       },
     },
     async ({ name }) => {
-      const deleted = store.deleteSnapshot(name)
+      const deleted = snapshots.delete(name)
       if (!deleted) {
         return textResult(`Snapshot "${name}" not found.`)
       }
