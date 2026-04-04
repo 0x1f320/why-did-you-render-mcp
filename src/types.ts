@@ -24,4 +24,5 @@ export interface RenderReport {
 export type WsMessage = {
 	type: "render";
 	payload: RenderReport;
+	projectId?: string;
 };

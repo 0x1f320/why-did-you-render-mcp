@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTools } from "./tools.js";
+import { registerTools } from "./tools/index.js";
 import { createWsServer } from "./ws.js";
 
 const DEFAULT_WS_PORT = 4649;
