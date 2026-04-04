@@ -73,5 +73,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "pnpm": {}
+  "pnpm": {
+    "ignoredBuiltDependencies": ["@biomejs/biome"]
+  }
 }
