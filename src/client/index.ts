@@ -1,4 +1,4 @@
-import type { RenderInfo, WsMessage } from "../types.js";
+import type { UpdateInfo, WsMessage } from "../types.js";
 
 const DEFAULT_WS_URL = "ws://localhost:4649";
 
@@ -42,10 +42,14 @@ export function buildOptions(opts?: ClientOptions) {
 	}
 
 	return {
-		notifier(info: RenderInfo) {
+		notifier(info: UpdateInfo) {
 			send({
 				type: "render",
-				payload: info,
+				payload: {
+					displayName: info.displayName,
+					reason: info.reason,
+					hookName: info.hookName,
+				},
 			});
 		},
 	};

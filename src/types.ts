@@ -1,33 +1,17 @@
-export interface RenderInfo {
-	componentName: string;
-	reason: {
-		propsDifferences: PropDifference[] | null;
-		stateDifferences: StateDifference[] | null;
-		hookDifferences: HookDifference[] | null;
-	};
-	timestamp: number;
+import type {
+	ReasonForUpdate,
+	UpdateInfo,
+} from "@welldone-software/why-did-you-render";
+
+export type { UpdateInfo } from "@welldone-software/why-did-you-render";
+
+export interface RenderReport {
+	displayName: string;
+	reason: ReasonForUpdate;
+	hookName?: string;
 }
 
-export interface PropDifference {
-	pathString: string;
-	prevValue: unknown;
-	nextValue: unknown;
-}
-
-export interface StateDifference {
-	pathString: string;
-	prevValue: unknown;
-	nextValue: unknown;
-}
-
-export interface HookDifference {
-	hookName: string;
-	pathString: string;
-	prevValue: unknown;
-	nextValue: unknown;
-}
-
-export interface WsMessage {
+export type WsMessage = {
 	type: "render";
-	payload: RenderInfo;
-}
+	payload: RenderReport;
+};
