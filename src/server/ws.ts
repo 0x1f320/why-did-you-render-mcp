@@ -19,6 +19,8 @@ export function createWsServer(port: number): Server | null {
   >(httpServer, {
     cors: { origin: "*" },
     serveClient: false,
+    transports: ["websocket"],
+    maxHttpBufferSize: 50e6,
   })
 
   io.on("connection", (socket) => {
