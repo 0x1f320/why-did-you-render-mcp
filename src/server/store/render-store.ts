@@ -11,6 +11,7 @@ import { join } from "node:path"
 import type { RenderReport } from "../../types.js"
 import type {
   BufferMeta,
+  CommitInfo,
   ComponentSummary,
   ParsedFilename,
   RenderWithProject,
@@ -46,6 +47,7 @@ export class RenderStore {
     const stored: StoredRender = {
       ...report,
       projectId,
+      timestamp: Date.now(),
       ...(commitId != null && { commitId }),
     }
 
@@ -228,6 +230,25 @@ export class RenderStore {
     }
 
     return [...ids].sort((a, b) => a - b)
+  }
+
+  getCommits(projectId?: string): CommitInfo[] {
+    this.flush(projectId)
+    const files = projectId ? this.projectFiles(projectId) : this.jsonlFiles()
+    const commits: CommitInfo[] = []
+    for (const f of files) {
+      const parsed = this.parseFilename(f)
+      if (parsed?.commitId == null) continue
+      const renders = readJsonl(join(this.dir, f))
+      if (renders.length === 0) continue
+      commits.push({
+        commitId: parsed.commitId,
+        timestamp: renders.find((r) => r.timestamp != null)?.timestamp ?? null,
+        renderCount: renders.length,
+        components: [...new Set(renders.map((r) => r.displayName))],
+      })
+    }
+    return commits.sort((a, b) => a.commitId - b.commitId)
   }
 
   getRendersByCommit(

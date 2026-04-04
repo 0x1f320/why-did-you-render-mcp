@@ -24,15 +24,15 @@ export function register(server: McpServer): void {
       const resolved = resolveProject(project)
       if (resolved.error) return textResult(resolved.error)
 
-      const commitIds = store.getCommitIds(resolved.projectId)
+      const commits = store.getCommits(resolved.projectId)
 
-      if (commitIds.length === 0) {
+      if (commits.length === 0) {
         return textResult(
           "No commits recorded yet. Make sure the browser is connected and triggering re-renders.",
         )
       }
 
-      return textResult(JSON.stringify(commitIds))
+      return textResult(JSON.stringify(commits, null, 2))
     },
   )
 }
