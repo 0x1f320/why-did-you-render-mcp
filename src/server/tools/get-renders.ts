@@ -6,11 +6,11 @@ import { textResult } from "./utils/text-result.js"
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "get_unnecessary_renders",
+    "get_renders",
     {
-      title: "Get Unnecessary Renders",
+      title: "Get Renders",
       description:
-        "Returns all unnecessary re-renders collected from the browser. If multiple projects are active and no project is specified, the tool will ask you to disambiguate by asking the user for their dev server URL.",
+        "Returns all re-renders collected from the browser. If multiple projects are active and no project is specified, the tool will ask you to disambiguate by asking the user for their dev server URL.",
       inputSchema: {
         component: z
           .string()
@@ -35,8 +35,8 @@ export function register(server: McpServer): void {
       if (renders.length === 0) {
         return textResult(
           component
-            ? `No unnecessary renders recorded for "${component}".`
-            : "No unnecessary renders recorded yet. Make sure the browser is connected and triggering re-renders.",
+            ? `No renders recorded for "${component}".`
+            : "No renders recorded yet. Make sure the browser is connected and triggering re-renders.",
         )
       }
 

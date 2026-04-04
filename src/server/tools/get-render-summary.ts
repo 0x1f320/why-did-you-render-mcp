@@ -10,7 +10,7 @@ export function register(server: McpServer): void {
     {
       title: "Get Render Summary",
       description:
-        "Returns a summary of unnecessary re-renders grouped by component name with counts. Use groupBy: 'commit' to get per-commit breakdowns instead of a single aggregate. If multiple projects are active and no project is specified, the tool will ask you to disambiguate.",
+        "Returns a summary of re-renders grouped by component name with counts. Use groupBy: 'commit' to get per-commit breakdowns instead of a single aggregate. If multiple projects are active and no project is specified, the tool will ask you to disambiguate.",
       inputSchema: {
         project: z
           .string()
@@ -43,7 +43,7 @@ function aggregateSummary(projectId?: string) {
   const summary = store.getSummary(projectId)
 
   if (Object.keys(summary).length === 0) {
-    return textResult("No unnecessary renders recorded yet.")
+    return textResult("No renders recorded yet.")
   }
 
   const lines: string[] = []
@@ -54,14 +54,14 @@ function aggregateSummary(projectId?: string) {
     }
   }
 
-  return textResult(`Unnecessary re-render summary:\n\n${lines.join("\n")}`)
+  return textResult(`Re-render summary:\n\n${lines.join("\n")}`)
 }
 
 function commitSummary(projectId?: string) {
   const summary = store.getSummaryByCommit(projectId)
 
   if (Object.keys(summary).length === 0) {
-    return textResult("No unnecessary renders with commit IDs recorded yet.")
+    return textResult("No renders with commit IDs recorded yet.")
   }
 
   const lines: string[] = []
@@ -80,7 +80,5 @@ function commitSummary(projectId?: string) {
     }
   }
 
-  return textResult(
-    `Unnecessary re-render summary (by commit):\n\n${lines.join("\n")}`,
-  )
+  return textResult(`Re-render summary (by commit):\n\n${lines.join("\n")}`)
 }
