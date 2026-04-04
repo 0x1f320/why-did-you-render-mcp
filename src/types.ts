@@ -34,6 +34,16 @@ export interface SetValue {
   values: SafeValue[]
 }
 
+export interface ReactNodeValue {
+  type: "react-node"
+  component: {
+    name: string
+    memo: boolean
+    forwardRef: boolean
+  }
+  props: { [key: string]: SafeValue }
+}
+
 export type SafeValue =
   | string
   | number
@@ -45,6 +55,7 @@ export type SafeValue =
   | ErrorValue
   | MapValue
   | SetValue
+  | ReactNodeValue
   | SafeValue[]
   | { [key: string]: SafeValue }
 

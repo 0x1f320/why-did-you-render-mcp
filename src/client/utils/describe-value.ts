@@ -1,6 +1,86 @@
-import type { SafeValue } from "../../types.js"
+import type { ReactNodeValue, SafeValue } from "../../types.js"
 
 const MAX_DEPTH = 8
+
+const REACT_ELEMENT_SYMBOL = Symbol.for("react.element")
+const REACT_TRANSITIONAL_ELEMENT_SYMBOL = Symbol.for(
+  "react.transitional.element",
+)
+const REACT_MEMO_TYPE = Symbol.for("react.memo")
+const REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref")
+
+interface ReactElement {
+  $$typeof: symbol | number
+  type: unknown
+  props: Record<string, unknown>
+}
+
+function isReactElement(value: unknown): value is ReactElement {
+  if (typeof value !== "object" || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    v.$$typeof === REACT_ELEMENT_SYMBOL ||
+    v.$$typeof === REACT_TRANSITIONAL_ELEMENT_SYMBOL ||
+    v.$$typeof === 0xeac7
+  )
+}
+
+function resolveComponentInfo(type: unknown): {
+  name: string
+  memo: boolean
+  forwardRef: boolean
+} {
+  let memo = false
+  let forwardRef = false
+  let current = type
+
+  // Unwrap memo/forwardRef wrappers
+  for (let i = 0; i < 5; i++) {
+    if (typeof current !== "object" || current === null) break
+    const wrapper = current as {
+      $$typeof?: symbol
+      type?: unknown
+      render?: unknown
+    }
+    if (wrapper.$$typeof === REACT_MEMO_TYPE) {
+      memo = true
+      current = wrapper.type
+    } else if (wrapper.$$typeof === REACT_FORWARD_REF_TYPE) {
+      forwardRef = true
+      current = wrapper.render
+    } else {
+      break
+    }
+  }
+
+  let name = "Unknown"
+  if (typeof current === "string") {
+    name = current
+  } else if (typeof current === "function") {
+    name =
+      (current as { displayName?: string }).displayName ||
+      current.name ||
+      "Anonymous"
+  }
+
+  return { name, memo, forwardRef }
+}
+
+function serializeReactElement(
+  el: ReactElement,
+  seen: WeakSet<object>,
+  depth: number,
+): ReactNodeValue {
+  const component = resolveComponentInfo(el.type)
+  const props: { [key: string]: SafeValue } = {}
+  if (el.props && typeof el.props === "object") {
+    for (const key of Object.keys(el.props)) {
+      if (key === "children") continue
+      props[key] = serialize(el.props[key], seen, depth + 1)
+    }
+  }
+  return { type: "react-node", component, props }
+}
 
 function serialize(
   value: unknown,
@@ -25,6 +105,10 @@ function serialize(
   if (depth >= MAX_DEPTH) return "[MaxDepth]"
 
   seen.add(value as object)
+
+  if (isReactElement(value)) {
+    return serializeReactElement(value, seen, depth)
+  }
 
   if (Array.isArray(value)) {
     return value.map((item) => serialize(item, seen, depth + 1))
