@@ -7,6 +7,7 @@ import type {
   UpdateInfo,
   WdyrConfig,
 } from "../types.js"
+import { parseStack } from "./utils/parse-stack.js"
 import { sanitizeReason } from "./utils/sanitize-reason.js"
 
 interface DevToolsHook {
@@ -122,10 +123,13 @@ export function buildOptions(opts?: ClientOptions): WhyDidYouRenderOptions {
   return {
     ...wdyrOpts,
     notifier(info: UpdateInfo) {
+      const stackFrames = parseStack(new Error())
+
       const report: RenderReport = {
         displayName: info.displayName,
         reason: sanitizeReason(info.reason),
         hookName: info.hookName,
+        ...(stackFrames.length > 0 && { stackFrames }),
       }
 
       if (pendingBatch && pendingBatch.commitId === commitId) {
