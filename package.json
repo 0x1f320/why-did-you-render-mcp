@@ -1,6 +1,6 @@
 {
   "name": "@0x1f320.sh/why-did-you-render-mcp",
-  "version": "0.0.0",
+  "version": "1.0.0-dev.9",
   "type": "module",
   "description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
   "license": "MIT",
@@ -34,7 +34,9 @@
       "require": "./dist/client/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",

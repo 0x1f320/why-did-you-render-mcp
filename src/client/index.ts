@@ -14,6 +14,13 @@ declare global {
 
 const DEFAULT_WS_URL = "ws://localhost:4649"
 
+const PREFIX_STYLE = "color: #38bdf8; font-weight: bold"
+const RESET_STYLE = "color: inherit; font-weight: normal"
+
+function log(message: string) {
+  console.log(`%c[WDYR MCP]%c ${message}`, PREFIX_STYLE, RESET_STYLE)
+}
+
 export interface ClientOptions {
   wsUrl?: string
   projectId?: string
@@ -57,6 +64,7 @@ export function buildOptions(opts?: ClientOptions) {
     ws = new WebSocket(wsUrl)
 
     ws.addEventListener("open", () => {
+      log(`Connected to ${wsUrl}`)
       retryDelay = BASE_DELAY
       for (const msg of queue) {
         ws?.send(JSON.stringify(msg))
@@ -71,6 +79,7 @@ export function buildOptions(opts?: ClientOptions) {
     })
 
     ws.addEventListener("error", () => {
+      log(`Connection failed (${wsUrl}). Retrying in ${retryDelay / 1000}s...`)
       ws?.close()
     })
   }
