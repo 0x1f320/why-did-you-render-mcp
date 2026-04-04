@@ -14,8 +14,12 @@ import { readJsonl } from "./utils/read-jsonl.js"
 import { sanitizeProjectId } from "./utils/sanitize-project-id.js"
 import { toResult } from "./utils/to-result.js"
 
+const FLUSH_DELAY_MS = 200
+
 export class RenderStore {
   private readonly dir: string
+  private readonly buffers = new Map<string, StoredRender[]>()
+  private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -24,10 +28,51 @@ export class RenderStore {
 
   addRender(report: RenderReport, projectId: string): void {
     const stored: StoredRender = { ...report, projectId }
-    appendFileSync(this.projectFile(projectId), `${JSON.stringify(stored)}\n`)
+
+    let buf = this.buffers.get(projectId)
+    if (!buf) {
+      buf = []
+      this.buffers.set(projectId, buf)
+    }
+    buf.push(stored)
+
+    const existing = this.timers.get(projectId)
+    if (existing) clearTimeout(existing)
+
+    this.timers.set(
+      projectId,
+      setTimeout(() => this.flush(projectId), FLUSH_DELAY_MS),
+    )
+  }
+
+  flush(projectId?: string): void {
+    if (projectId) {
+      this.flushProject(projectId)
+    } else {
+      for (const id of this.buffers.keys()) {
+        this.flushProject(id)
+      }
+    }
+  }
+
+  private flushProject(projectId: string): void {
+    const buf = this.buffers.get(projectId)
+    if (!buf || buf.length === 0) return
+
+    const lines = buf.map((s) => JSON.stringify(s)).join("\n")
+    appendFileSync(this.projectFile(projectId), `${lines}\n`)
+
+    buf.length = 0
+    const timer = this.timers.get(projectId)
+    if (timer) {
+      clearTimeout(timer)
+      this.timers.delete(projectId)
+    }
   }
 
   getAllRenders(projectId?: string): RenderWithProject[] {
+    this.flush(projectId)
+
     if (projectId) {
       return readJsonl(this.projectFile(projectId)).map(toResult)
     }
@@ -48,9 +93,20 @@ export class RenderStore {
 
   clearRenders(projectId?: string): void {
     if (projectId) {
+      this.buffers.delete(projectId)
+      const timer = this.timers.get(projectId)
+      if (timer) {
+        clearTimeout(timer)
+        this.timers.delete(projectId)
+      }
       const file = this.projectFile(projectId)
       if (existsSync(file)) unlinkSync(file)
     } else {
+      for (const [id, timer] of this.timers) {
+        clearTimeout(timer)
+      }
+      this.buffers.clear()
+      this.timers.clear()
       for (const f of this.jsonlFiles()) {
         unlinkSync(join(this.dir, f))
       }
@@ -58,6 +114,7 @@ export class RenderStore {
   }
 
   getProjects(): string[] {
+    this.flush()
     const projects = new Set<string>()
 
     for (const f of this.jsonlFiles()) {
