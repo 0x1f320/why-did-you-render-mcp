@@ -14,7 +14,7 @@ registerTools(server)
 
 async function main() {
   const port = Number(process.env.WDYR_WS_PORT) || DEFAULT_WS_PORT
-  const io = createWsServer(port)
+  const ws = createWsServer(port)
 
   const transport = new StdioServerTransport()
   await server.connect(transport)
@@ -25,7 +25,7 @@ async function main() {
     if (shuttingDown) return
     shuttingDown = true
     console.error("[wdyr-mcp] Shutting down…")
-    io?.close()
+    ws.close()
     await server.close()
     process.exit(0)
   }

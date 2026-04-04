@@ -8,21 +8,17 @@ import type {
 } from "../types.js"
 import { store } from "./store/index.js"
 
-export function createWsServer(port: number): Server | null {
-  const httpServer = http.createServer()
+const RETRY_INTERVAL_MS = 3_000
 
-  const io = new Server<
+function attachHandlers(
+  io: Server<
     ClientToServerEvents,
     ServerToClientEvents,
     InterServerEvents,
     SocketData
-  >(httpServer, {
-    cors: { origin: "*" },
-    serveClient: false,
-    transports: ["websocket"],
-    maxHttpBufferSize: 50e6,
-  })
-
+  >,
+  port: number,
+) {
   io.on("connection", (socket) => {
     console.error(`[wdyr-mcp] browser connected (http://localhost:${port})`)
     socket.data.projectId = null
@@ -66,22 +62,77 @@ export function createWsServer(port: number): Server | null {
       }
     })
   })
+}
 
-  httpServer.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE") {
+export interface WsHandle {
+  close(): void
+}
+
+export function createWsServer(port: number): WsHandle {
+  let retryTimer: ReturnType<typeof setInterval> | null = null
+  let io: Server | null = null
+  let httpServer: http.Server | null = null
+  let stopped = false
+
+  function tryListen() {
+    if (stopped) return
+
+    httpServer = http.createServer()
+
+    io = new Server<
+      ClientToServerEvents,
+      ServerToClientEvents,
+      InterServerEvents,
+      SocketData
+    >(httpServer, {
+      cors: { origin: "*" },
+      serveClient: false,
+      transports: ["websocket"],
+      maxHttpBufferSize: 50e6,
+    })
+
+    attachHandlers(io, port)
+
+    httpServer.once("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(
+          `[wdyr-mcp] Port ${port} in use, will retry every ${RETRY_INTERVAL_MS / 1000}s`,
+        )
+        io?.close()
+        io = null
+        httpServer = null
+        startRetry()
+      } else {
+        console.error("[wdyr-mcp] server error:", err)
+      }
+    })
+
+    httpServer.listen(port, "127.0.0.1", () => {
       console.error(
-        `[wdyr-mcp] Port ${port} already in use, another instance owns the WS server. Skipping.`,
+        `[wdyr-mcp] socket.io server listening on http://localhost:${port}`,
       )
-    } else {
-      console.error("[wdyr-mcp] server error:", err)
-    }
-  })
+      stopRetry()
+    })
+  }
 
-  httpServer.listen(port, "127.0.0.1", () => {
-    console.error(
-      `[wdyr-mcp] socket.io server listening on http://localhost:${port}`,
-    )
-  })
+  function startRetry() {
+    if (retryTimer || stopped) return
+    retryTimer = setInterval(tryListen, RETRY_INTERVAL_MS)
+  }
 
-  return io
+  function stopRetry() {
+    if (!retryTimer) return
+    clearInterval(retryTimer)
+    retryTimer = null
+  }
+
+  tryListen()
+
+  return {
+    close() {
+      stopped = true
+      stopRetry()
+      io?.close()
+    },
+  }
 }
