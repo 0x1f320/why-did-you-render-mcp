@@ -1,3 +1,7 @@
 node_modules/
 dist/
 coverage/
+
+# Copied from root during build for npm publish
+packages/server/README.md
+packages/client/README.md

@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm -r run build",
+    "build": "pnpm -r run build && cp README.md packages/server/README.md && cp README.md packages/client/README.md",
     "dev": "pnpm -r run dev",
     "check": "biome check .",
     "check:fix": "biome check --fix .",
