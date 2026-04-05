@@ -1,3 +1,10 @@
+## @0x1f320.sh/why-did-you-render-mcp-client [1.0.4-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp-client@1.0.3...@0x1f320.sh/why-did-you-render-mcp-client@1.0.4-dev.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* add types condition to client package exports ([#75](https://github.com/0x1f320/why-did-you-render-mcp/issues/75)) ([267ea82](https://github.com/0x1f320/why-did-you-render-mcp/commit/267ea82ec2ecc4d952cac842342267c5fcd2c59f))
+
 ## @0x1f320.sh/why-did-you-render-mcp-client [1.0.3](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp-client@1.0.2...@0x1f320.sh/why-did-you-render-mcp-client@1.0.3) (2026-04-05)
 
 
