@@ -1,3 +1,10 @@
+## [1.1.1-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0...v1.1.1-dev.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* add typesVersions for moduleResolution "node" compatibility ([#57](https://github.com/0x1f320/why-did-you-render-mcp/issues/57)) ([e6d1da0](https://github.com/0x1f320/why-did-you-render-mcp/commit/e6d1da04d89c93bd2f484f98d97245bfcc8949ad))
+
 # [1.1.0](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0...v1.1.0) (2026-04-05)
 
 
