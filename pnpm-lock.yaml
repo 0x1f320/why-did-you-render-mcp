@@ -63,9 +63,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.1
         version: 1.29.0(zod@3.25.76)
-      '@why-did-you-render-mcp/types':
-        specifier: workspace:*
-        version: link:../types
       socket.io:
         specifier: ^4.8.3
         version: 4.8.3
@@ -78,6 +75,10 @@ importers:
       zod:
         specifier: ^3.24.4
         version: 3.25.76
+    devDependencies:
+      '@why-did-you-render-mcp/types':
+        specifier: workspace:*
+        version: link:../types
 
   packages/types: {}
 
