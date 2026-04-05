@@ -1,3 +1,54 @@
+# [1.1.0-dev.7](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.6...v1.1.0-dev.7) (2026-04-04)
+
+# [1.1.0-dev.6](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.5...v1.1.0-dev.6) (2026-04-04)
+
+
+### Features
+
+* add HMR detection and wait_for_renders tool ([#52](https://github.com/0x1f320/why-did-you-render-mcp/issues/52)) ([807fdda](https://github.com/0x1f320/why-did-you-render-mcp/commit/807fdda8f333ba77b4917b4e52d94415b1cc195b))
+
+# [1.1.0-dev.5](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.4...v1.1.0-dev.5) (2026-04-04)
+
+
+### Features
+
+* add render snapshot save and compare tools ([#51](https://github.com/0x1f320/why-did-you-render-mcp/issues/51)) ([5fb0a05](https://github.com/0x1f320/why-did-you-render-mcp/commit/5fb0a05cd80d846515083761f74c4c68da0a8fd4))
+
+# [1.1.0-dev.4](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.3...v1.1.0-dev.4) (2026-04-04)
+
+
+### Features
+
+* enforce pause state on server side ([#50](https://github.com/0x1f320/why-did-you-render-mcp/issues/50)) ([71d56c7](https://github.com/0x1f320/why-did-you-render-mcp/commit/71d56c793e2b37312cc999fc523d62f7fc05be36))
+
+# [1.1.0-dev.3](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.2...v1.1.0-dev.3) (2026-04-04)
+
+
+### Features
+
+* capture render duration from React Fiber actualDuration ([#49](https://github.com/0x1f320/why-did-you-render-mcp/issues/49)) ([8bffa34](https://github.com/0x1f320/why-did-you-render-mcp/commit/8bffa34d30a4a45d745ddecf793635fcaf3f5872))
+
+# [1.1.0-dev.2](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.1.0-dev.1...v1.1.0-dev.2) (2026-04-04)
+
+
+### Features
+
+* relay pause/resume commands from non-owner MCP instances ([#48](https://github.com/0x1f320/why-did-you-render-mcp/issues/48)) ([3054df2](https://github.com/0x1f320/why-did-you-render-mcp/commit/3054df26b8947936294504153d567be987f11a4d))
+
+# [1.1.0-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.1-dev.1...v1.1.0-dev.1) (2026-04-04)
+
+
+### Features
+
+* add pause/resume render collection tools ([#47](https://github.com/0x1f320/why-did-you-render-mcp/issues/47)) ([01fc993](https://github.com/0x1f320/why-did-you-render-mcp/commit/01fc993279fad4864951e91149fb00ec69bb2417))
+
+## [1.0.1-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/v1.0.0...v1.0.1-dev.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* retry WS server bind when owner instance exits ([#45](https://github.com/0x1f320/why-did-you-render-mcp/issues/45)) ([71334a6](https://github.com/0x1f320/why-did-you-render-mcp/commit/71334a676af310c0cf620854638cc621cdc8cbb4))
+
 # 1.0.0 (2026-04-04)
 
 

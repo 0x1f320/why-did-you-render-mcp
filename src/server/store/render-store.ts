@@ -8,11 +8,10 @@ import {
 } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
-import type { RenderReport, WdyrConfig } from "../../types.js"
+import type { RenderReport } from "../../types.js"
 import type {
   BufferMeta,
   CommitInfo,
-  ComponentSummary,
   ParsedFilename,
   RenderWithProject,
   StoredRender,
@@ -36,8 +35,6 @@ export class RenderStore {
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly dicts = new Map<string, ValueDict>()
   private readonly bufferMeta = new Map<string, BufferMeta>()
-  private readonly trackedComponents = new Map<string, string[]>()
-  private readonly wdyrConfigs = new Map<string, WdyrConfig>()
 
   constructor(dir?: string) {
     this.dir = dir ?? join(homedir(), ".wdyr-mcp", "renders")
@@ -311,96 +308,10 @@ export class RenderStore {
       .flatMap((f) => readJsonl(join(this.dir, f)).map(toResult))
   }
 
-  getSummary(
-    projectId?: string,
-  ): Record<string, Record<string, ComponentSummary>> {
-    const renders = this.getAllRenders(projectId)
-    const summary: Record<string, Record<string, ComponentSummary>> = {}
-
-    for (const r of renders) {
-      summary[r.project] ??= {}
-      const project = summary[r.project]
-      project[r.displayName] ??= {
-        count: 0,
-        reasons: { props: 0, state: 0, hooks: 0 },
-      }
-      const entry = project[r.displayName]
-      entry.count++
-      if (Array.isArray(r.reason.propsDifferences)) entry.reasons.props++
-      if (Array.isArray(r.reason.stateDifferences)) entry.reasons.state++
-      if (Array.isArray(r.reason.hookDifferences)) entry.reasons.hooks++
-    }
-
-    return summary
-  }
-
-  getSummaryByCommit(
-    projectId?: string,
-  ): Record<string, Record<number, Record<string, ComponentSummary>>> {
-    const renders = this.getAllRenders(projectId)
-    const summary: Record<
-      string,
-      Record<number, Record<string, ComponentSummary>>
-    > = {}
-
-    for (const r of renders) {
-      if (r.commitId == null) continue
-      summary[r.project] ??= {}
-      summary[r.project][r.commitId] ??= {}
-      const commit = summary[r.project][r.commitId]
-      commit[r.displayName] ??= {
-        count: 0,
-        reasons: { props: 0, state: 0, hooks: 0 },
-      }
-      const entry = commit[r.displayName]
-      entry.count++
-      if (Array.isArray(r.reason.propsDifferences)) entry.reasons.props++
-      if (Array.isArray(r.reason.stateDifferences)) entry.reasons.state++
-      if (Array.isArray(r.reason.hookDifferences)) entry.reasons.hooks++
-    }
-
-    return summary
-  }
-
-  setTrackedComponents(components: string[], projectId: string): void {
-    this.trackedComponents.set(projectId, components)
-  }
-
-  getTrackedComponents(
-    projectId?: string,
-  ): Record<string, { registered: string[]; observed: string[] }> {
-    const result: Record<string, { registered: string[]; observed: string[] }> =
-      {}
-
-    const projects = projectId ? [projectId] : this.getProjects()
-    for (const proj of projects) {
-      const observed = [
-        ...new Set(this.getAllRenders(proj).map((r) => r.displayName)),
-      ]
-      const registered = this.trackedComponents.get(proj) ?? []
-      result[proj] = { registered, observed }
-    }
-
-    return result
-  }
-
-  setWdyrConfig(config: WdyrConfig, projectId: string): void {
-    this.wdyrConfigs.set(projectId, config)
-  }
-
-  getWdyrConfig(projectId?: string): Record<string, WdyrConfig> {
-    const result: Record<string, WdyrConfig> = {}
-
-    if (projectId) {
-      const config = this.wdyrConfigs.get(projectId)
-      if (config) result[projectId] = config
-    } else {
-      for (const [proj, config] of this.wdyrConfigs) {
-        result[proj] = config
-      }
-    }
-
-    return result
+  getRendersSince(timestamp: number, projectId?: string): RenderWithProject[] {
+    return this.getAllRenders(projectId).filter(
+      (r) => r.timestamp != null && r.timestamp > timestamp,
+    )
   }
 
   private rewriteFile(filePath: string, renders: StoredRender[]): void {

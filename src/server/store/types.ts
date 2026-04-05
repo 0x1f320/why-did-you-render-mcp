@@ -29,4 +29,14 @@ export interface CommitInfo {
 export interface ComponentSummary {
   count: number
   reasons: { props: number; state: number; hooks: number }
+  totalDuration?: number
+}
+
+export interface SnapshotMeta {
+  name: string
+  timestamp: number
+}
+
+export interface Snapshot extends SnapshotMeta {
+  data: Record<string, Record<string, ComponentSummary>>
 }

@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { store } from "../store/index.js"
+import { store, summarize, summarizeByCommit } from "../store/index.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"
 
@@ -39,6 +39,11 @@ export function register(server: McpServer): void {
   )
 }
 
+function formatDuration(totalDuration?: number): string {
+  if (totalDuration == null) return ""
+  return ` (${totalDuration.toFixed(1)}ms)`
+}
+
 function formatReasons(reasons: {
   props: number
   state: number
@@ -52,7 +57,7 @@ function formatReasons(reasons: {
 }
 
 function aggregateSummary(projectId?: string) {
-  const summary = store.getSummary(projectId)
+  const summary = summarize(store.getAllRenders(projectId))
 
   if (Object.keys(summary).length === 0) {
     return textResult("No renders recorded yet.")
@@ -61,8 +66,12 @@ function aggregateSummary(projectId?: string) {
   const lines: string[] = []
   for (const [proj, components] of Object.entries(summary)) {
     lines.push(`[${proj}]`)
-    for (const [name, { count, reasons }] of Object.entries(components)) {
-      lines.push(`  ${name}: ${count} re-render(s)${formatReasons(reasons)}`)
+    for (const [name, { count, reasons, totalDuration }] of Object.entries(
+      components,
+    )) {
+      lines.push(
+        `  ${name}: ${count} re-render(s)${formatReasons(reasons)}${formatDuration(totalDuration)}`,
+      )
     }
   }
 
@@ -70,7 +79,7 @@ function aggregateSummary(projectId?: string) {
 }
 
 function commitSummary(projectId?: string) {
-  const summary = store.getSummaryByCommit(projectId)
+  const summary = summarizeByCommit(store.getAllRenders(projectId))
 
   if (Object.keys(summary).length === 0) {
     return textResult("No renders with commit IDs recorded yet.")
@@ -86,8 +95,12 @@ function commitSummary(projectId?: string) {
       const components = commits[commitId]
       const total = Object.values(components).reduce((s, c) => s + c.count, 0)
       lines.push(`  Commit #${commitId} (${total} re-render(s)):`)
-      for (const [name, { count, reasons }] of Object.entries(components)) {
-        lines.push(`    ${name}: ${count}${formatReasons(reasons)}`)
+      for (const [name, { count, reasons, totalDuration }] of Object.entries(
+        components,
+      )) {
+        lines.push(
+          `    ${name}: ${count}${formatReasons(reasons)}${formatDuration(totalDuration)}`,
+        )
       }
     }
   }
