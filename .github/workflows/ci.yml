@@ -39,7 +39,7 @@ jobs:
       - run: pnpm test
 
       - if: github.event_name == 'push'
-        run: pnpm exec multi-semantic-release --sequential-init
+        run: pnpm exec multi-semantic-release --sequential-init --ignore-private-packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
