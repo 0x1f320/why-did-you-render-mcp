@@ -163,11 +163,16 @@ Once both the MCP server and your React dev server are running, interact with yo
 | Tool | Description |
 | --- | --- |
 | `get_renders` | Returns all captured unnecessary re-renders, including stack traces. Optionally filter by `component` name. |
-| `get_render_summary` | Returns a summary of re-renders grouped by component with counts. |
+| `get_render_summary` | Returns a summary of re-renders grouped by component with counts and durations. |
 | `get_commits` | Lists React commit IDs that have recorded render data. Use these IDs with `get_renders_by_commit`. |
 | `get_renders_by_commit` | Returns all unnecessary re-renders for a specific React commit ID, including stack traces. |
 | `get_tracked_components` | Lists components currently tracked by why-did-you-render. |
 | `get_projects` | Lists all active projects (identified by their origin URL). |
+| `save_snapshot` | Saves the current render summary as a named snapshot for later comparison. |
+| `list_snapshots` | Lists all saved render snapshots with their timestamps. |
+| `compare_snapshots` | Compares two saved render snapshots and shows per-component render count changes. |
+| `delete_snapshot` | Deletes a saved render snapshot by name. |
+| `wait_for_renders` | Waits for new renders after code changes (e.g. HMR), with configurable timeout. |
 | `clear_renders` | Clears all stored render data. Optionally scope to a specific project. |
 | `pause_renders` | Pauses render data collection in the browser. Clients stop reporting until resumed. |
 | `resume_renders` | Resumes render data collection previously paused with `pause_renders`. |
@@ -193,6 +198,26 @@ Each frame has the following structure:
 
 Agents can use `stackFrames` to pinpoint the exact source location of each unnecessary re-render — navigating directly to the file and line that caused it, without requiring manual browser inspection.
 
+### Snapshots
+
+Snapshots let agents capture the current render summary at a point in time and compare it against a later state. This is useful for measuring whether a code change actually reduced unnecessary re-renders:
+
+1. Call `save_snapshot` with a name (e.g. `"before-fix"`)
+2. Make code changes and interact with the app
+3. Call `save_snapshot` with another name (e.g. `"after-fix"`)
+4. Call `compare_snapshots` to see per-component render count changes
+
+Snapshots are stored as JSON files in `~/.wdyr-mcp/snapshots/`.
+
+### HMR-aware waiting
+
+`wait_for_renders` lets agents wait for new renders after a code change. It detects HMR (Hot Module Replacement) events from both Vite and webpack, so it knows when the browser has applied the update. This enables a workflow like:
+
+1. Agent edits code
+2. Agent calls `wait_for_renders` (with optional timeout)
+3. Tool waits for HMR to complete and new renders to arrive
+4. Returns the new render data for analysis
+
 ### Commit-level grouping
 
 Each render report is tagged with a React **commit ID**, allowing agents to inspect which components re-rendered together in the same commit. The client tracks commits by hooking into `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot`, which React calls synchronously once per commit. A typical workflow:
@@ -210,12 +235,15 @@ Browser (project-b) ──┤
                 MCP #2 → WS(:4649)  → relay client ──▶ MCP #1
                       │
                       ▼
-               ~/.wdyr-mcp/renders/  (JSONL files, shared across instances)
-               ├─ http___localhost_3000.jsonl
-               └─ http___localhost_5173.jsonl
+               ~/.wdyr-mcp/
+               ├─ renders/  (JSONL files, shared across instances)
+               │  ├─ http___localhost_3000.jsonl
+               │  └─ http___localhost_5173.jsonl
+               └─ snapshots/  (JSON files, named snapshots)
+                  └─ before-fix.json
 ```
 
-- **Multiple MCP instances** can run simultaneously. Only the first instance (the "owner") starts the WebSocket server; others connect as socket.io clients to relay commands (e.g. pause/resume) to the owner. All instances share the same JSONL data directory.
+- **Multiple MCP instances** can run simultaneously. Only the first instance (the "owner") starts the WebSocket server; others connect as socket.io clients to relay commands (e.g. pause/resume) to the owner. All instances share the same data directories.
 - **Multi-project support** — Each project is identified by `location.origin`. Render data is stored in per-project JSONL files.
 - **No daemon required** — Each MCP instance is independent. The WebSocket server is opportunistically claimed by whichever instance starts first. Commands requiring WS access are relayed to the owner.
 - **Value dictionary deduplication** — Render reports often repeat the same `prevValue`/`nextValue` objects across thousands of entries. Each JSONL file stores a content-addressed dictionary on its first line, mapping xxhash-wasm hashes to unique values. Render lines reference them via `@@ref:<hash>` sentinels instead of inlining the full object, dramatically reducing file size. Reads hydrate refs transparently.
