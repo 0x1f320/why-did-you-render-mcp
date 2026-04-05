@@ -47,6 +47,7 @@ function attachHandlers(io: IoServer, port: number) {
     socket.on("config", (config, projectId) => {
       socket.data.projectId = projectId
       registry.setWdyrConfig(config, projectId)
+      if (isPaused(projectId)) socket.emit("pause")
     })
 
     socket.on("relay-pause", async (projectId) => {

@@ -26,5 +26,6 @@ export function setResumed(projectId: string | null): void {
     paused.clear()
   } else {
     paused.delete(projectId)
+    paused.delete(null)
   }
 }
