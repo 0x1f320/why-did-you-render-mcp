@@ -1,7 +1,3 @@
-import type { UpdateInfo } from "@welldone-software/why-did-you-render"
-
-export type { UpdateInfo } from "@welldone-software/why-did-you-render"
-
 export interface FunctionValue {
   type: "function"
   name: string

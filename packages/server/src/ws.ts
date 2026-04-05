@@ -1,11 +1,11 @@
 import http from "node:http"
-import { Server } from "socket.io"
 import type {
   ClientToServerEvents,
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
-} from "../types.js"
+} from "@why-did-you-render-mcp/types"
+import { Server } from "socket.io"
 import type { IoServer } from "./io.js"
 import { setIo } from "./io.js"
 import {

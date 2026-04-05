@@ -1,6 +1,7 @@
 # why-did-you-render-mcp
 
-[![npm version](https://img.shields.io/npm/v/@0x1f320.sh/why-did-you-render-mcp.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp)
+[![mcp](https://img.shields.io/npm/v/@0x1f320.sh/why-did-you-render-mcp.svg?label=mcp&style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp)
+[![web-client](https://img.shields.io/npm/v/@0x1f320.sh/why-did-you-render-mcp-client.svg?label=web-client&style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp-client)
 [![CI](https://img.shields.io/github/actions/workflow/status/0x1f320/why-did-you-render-mcp/ci.yml?style=flat&colorA=000000&colorB=000000)](https://github.com/0x1f320/why-did-you-render-mcp/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@0x1f320.sh/why-did-you-render-mcp?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp)
 
@@ -25,10 +26,22 @@ Client (runs in browser)  ── WebSocket ──▶  MCP Server (Node.js)
 
 The **client** runs inside your React app alongside `why-did-you-render`. Whenever an unnecessary re-render is detected, it sanitizes the render data and sends it over WebSocket to the **MCP server**. The server stores reports as JSONL files and exposes them through MCP tools that coding agents can query.
 
+## Packages
+
+This project is a monorepo with two published packages:
+
+| Package | npm | Description |
+| --- | --- | --- |
+| `@0x1f320.sh/why-did-you-render-mcp` | [![npm](https://img.shields.io/npm/v/@0x1f320.sh/why-did-you-render-mcp.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp) | MCP server (Node.js) — exposes render data as MCP tools |
+| `@0x1f320.sh/why-did-you-render-mcp-client` | [![npm](https://img.shields.io/npm/v/@0x1f320.sh/why-did-you-render-mcp-client.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/@0x1f320.sh/why-did-you-render-mcp-client) | Browser client — captures re-render data and sends it to the server |
+
+The client can be installed independently without pulling in server dependencies (MCP SDK, socket.io server, etc.).
+
 ## Installation
 
 ```sh
-npm install @0x1f320.sh/why-did-you-render-mcp@latest @welldone-software/why-did-you-render
+# In your React project (client only — no server deps)
+npm install @0x1f320.sh/why-did-you-render-mcp-client@latest @welldone-software/why-did-you-render
 ```
 
 ## Setup
@@ -40,7 +53,7 @@ In your app's entry point (e.g. `src/main.tsx` or `src/index.tsx`), set up `why-
 ```tsx
 import React from "react";
 import whyDidYouRender from "@welldone-software/why-did-you-render";
-import { buildOptions } from "@0x1f320.sh/why-did-you-render-mcp/client";
+import { buildOptions } from "@0x1f320.sh/why-did-you-render-mcp-client";
 
 if (process.env.NODE_ENV === "development") {
   whyDidYouRender(React, {

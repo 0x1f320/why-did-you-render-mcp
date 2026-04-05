@@ -1,5 +1,5 @@
 import { TraceMap, originalPositionFor } from "@jridgewell/trace-mapping"
-import type { StackFrameLocation } from "../../types.js"
+import type { StackFrameLocation } from "@why-did-you-render-mcp/types"
 
 const cache = new Map<string, Promise<TraceMap | null>>()
 

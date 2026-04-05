@@ -1,5 +1,8 @@
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "@why-did-you-render-mcp/types"
 import { type Socket, io as ioClient } from "socket.io-client"
-import type { ClientToServerEvents, ServerToClientEvents } from "../types.js"
 
 type RelaySocket = Socket<ServerToClientEvents, ClientToServerEvents>
 

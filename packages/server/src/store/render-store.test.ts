@@ -1,8 +1,11 @@
 import { mkdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import type {
+  RenderReport,
+  SafeReasonForUpdate,
+} from "@why-did-you-render-mcp/types"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import type { RenderReport, SafeReasonForUpdate } from "../../types.js"
 import { RenderStore } from "./render-store.js"
 import { DICT_KEY } from "./utils/value-dict.js"
 

@@ -1,0 +1,54 @@
+{
+  "name": "@0x1f320.sh/why-did-you-render-mcp",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "MCP server that receives why-did-you-render reports from the browser and exposes them as tools for AI coding agents to diagnose React performance issues",
+  "license": "MIT",
+  "author": {
+    "name": "0x1F320",
+    "email": "me@0x1f320.sh",
+    "url": "https://0x1f320.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0x1f320/why-did-you-render-mcp.git",
+    "directory": "packages/server"
+  },
+  "homepage": "https://github.com/0x1f320/why-did-you-render-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/0x1f320/why-did-you-render-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "react",
+    "why-did-you-render",
+    "performance",
+    "re-render"
+  ],
+  "bin": {
+    "why-did-you-render-mcp": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@why-did-you-render-mcp/types": "workspace:*",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "xxhash-wasm": "^1.1.0",
+    "zod": "^3.24.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

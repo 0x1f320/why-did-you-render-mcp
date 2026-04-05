@@ -1,5 +1,8 @@
+import type {
+  SafeHookDifference,
+  SafeValue,
+} from "@why-did-you-render-mcp/types"
 import xxhash from "xxhash-wasm"
-import type { SafeHookDifference, SafeValue } from "../../../types.js"
 import type { StoredRender } from "../types.js"
 
 export const DICT_KEY = "@@dict"

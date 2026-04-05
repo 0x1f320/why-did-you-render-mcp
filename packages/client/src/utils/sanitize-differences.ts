@@ -1,4 +1,4 @@
-import type { SafeHookDifference } from "../../types.js"
+import type { SafeHookDifference } from "@why-did-you-render-mcp/types"
 import { describeValue } from "./describe-value.js"
 
 export function sanitizeDifferences(

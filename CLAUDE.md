@@ -24,22 +24,30 @@ Browser (project-b) ──┤
 - **Multi-project support** — Each project is identified by the browser's `location.origin` (e.g. `http://localhost:3000`). Render data is stored in per-project JSONL files under `~/.wdyr-mcp/renders/`.
 - **Project disambiguation** — When only one project exists, tools auto-select it. When multiple exist, tools return a message instructing the agent to ask the user for their dev server URL.
 
+### Packages
+
+This is a pnpm workspace monorepo with three packages:
+
+- **`@0x1f320.sh/why-did-you-render-mcp`** (`packages/server/`) — MCP server (Node.js). Published to npm.
+- **`@0x1f320.sh/why-did-you-render-mcp-client`** (`packages/client/`) — Browser client. Published to npm independently, so users can install it without server dependencies.
+- **`@why-did-you-render-mcp/types`** (`packages/types/`) — Shared type definitions. Private, internal-only (not published). Both client and server depend on it via `workspace:*`.
+
 ### Components
 
-- **Client** (`src/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket in batches. Auto-tags messages with `location.origin` as the project identifier. Patches `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot` to track React commit IDs and capture `actualDuration` from React Fiber, enabling per-commit grouping and duration tracking. Captures stack traces on each render update and parses them into structured `StackFrame` arrays (with source map resolution) so agents can pinpoint the exact source location of each re-render. Detects HMR events (Vite `import.meta.hot` and webpack module.hot) and notifies the server so `wait_for_renders` can time its collection.
+- **Client** (`packages/client/`) — Runs in the browser. Receives `why-did-you-render` update callbacks, sanitizes the render reason (stripping non-serializable values like functions and circular refs), and sends `RenderReport` messages over WebSocket in batches. Auto-tags messages with `location.origin` as the project identifier. Patches `__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot` to track React commit IDs and capture `actualDuration` from React Fiber, enabling per-commit grouping and duration tracking. Captures stack traces on each render update and parses them into structured `StackFrame` arrays (with source map resolution) so agents can pinpoint the exact source location of each re-render. Detects HMR events (Vite `import.meta.hot` and webpack module.hot) and notifies the server so `wait_for_renders` can time its collection.
   - `utils/parse-stack.ts` — Parses `Error` stack traces into `StackFrame[]`. Filters out React internals, WDYR internals, and bundler noise. Classifies frames as `"hook"` (names starting with `use`) or `"component"`. Has both async (`parseStack`) and sync (`parseStackSync`) variants.
   - `utils/resolve-source-map.ts` — Resolves bundled file locations back to original source via `@jridgewell/trace-mapping`. Fetches and caches `.map` files; falls back to the bundled path if source maps are unavailable.
   - `utils/describe-value.ts` — Serializes complex values (React elements, DOM nodes, Maps, Sets, class instances, Errors) into JSON-safe descriptions with circular reference detection and max depth limiting.
   - `utils/sanitize-reason.ts` — Safe serialization of WDYR's `UpdateInfo.reason`, delegating to `sanitize-differences.ts` for hook differences.
   - `utils/sanitize-differences.ts` — Sanitizes hook difference arrays, ensuring all values are JSON-serializable.
-- **Server** (`src/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, persists render reports to JSONL files, and exposes them via MCP tools over stdio.
+- **Server** (`packages/server/`) — Runs as a Node.js process. Accepts WebSocket connections from the client, persists render reports to JSONL files, and exposes them via MCP tools over stdio.
   - `ws.ts` — WebSocket server with EADDRINUSE graceful handling. Also handles `relay-pause`/`relay-resume` events from non-owner MCP instances and broadcasts them to browser clients.
   - `io.ts` — Socket.io server instance management (singleton).
   - `relay-client.ts` — Socket.io client that non-owner MCP instances use to relay commands (pause/resume) to the owner's WS server. Connection is lazy (created on first relay call) and persists for the process lifetime.
   - `pause-state.ts` — Server-side pause state enforcement. Tracks pause state independently from the client, so the server can reject renders while paused even if the client connection is lost.
   - `store/` — Three main stores: `RenderStore` (JSONL-backed render data), `SnapshotStore` (JSON-backed named snapshots), and `ProjectRegistry` (in-memory project metadata — tracked components, WDYR config, HMR timestamps). Uses value dictionary deduplication (xxhash-wasm) to keep JSONL files compact.
   - `tools/` — One file per MCP tool: `get-renders`, `get-render-summary`, `get-commits`, `get-renders-by-commit`, `get-tracked-components`, `get-projects`, `clear-renders`, `pause-renders`, `resume-renders`, `save-snapshot`, `list-snapshots`, `compare-snapshots`, `delete-snapshot`, `wait-for-renders`.
-- **Types** (`src/types.ts`) — Shared type definitions including `RenderReport`, `SafeReasonForUpdate`, `StackFrame`, `StackFrameLocation`, and `WsMessage`.
+- **Types** (`packages/types/`) — Shared type definitions including `RenderReport`, `SafeReasonForUpdate`, `StackFrame`, `StackFrameLocation`, and socket.io event contracts. Private package, not published to npm.
 
 ### Design Decisions
 
@@ -59,70 +67,79 @@ Browser (project-b) ──┤
 
 - **Runtime**: Node.js 20+ (server), Browser (client)
 - **Language**: TypeScript (strict mode)
-- **Build**: tsdown (dual entry — `server/index` for Node, `client/index` for browser)
-- **Package Manager**: pnpm
-- **Linter/Formatter**: Biome (tabs, recommended rules)
+- **Build**: tsdown (per-package config — server ESM for Node, client ESM+CJS for browser)
+- **Package Manager**: pnpm (workspace monorepo)
+- **Linter/Formatter**: Biome (spaces, recommended rules)
 - **Protocol**: MCP SDK (`@modelcontextprotocol/sdk`), WebSocket (`ws`)
 - **Storage**: JSONL files (`~/.wdyr-mcp/renders/`) with value dictionary deduplication; JSON files (`~/.wdyr-mcp/snapshots/`) for named snapshots
 - **Hashing**: xxhash-wasm (WASM, no native addons)
+- **Release**: multi-semantic-release (independent versioning per package)
 
 ## Commands
 
-- `pnpm build` — Build both server and client
-- `pnpm dev` — Watch mode build
+- `pnpm build` — Build all packages
+- `pnpm dev` — Watch mode build for all packages
 - `pnpm check` — Lint and format check (Biome)
 - `pnpm check:fix` — Auto-fix lint and format issues
+- `pnpm typecheck` — TypeScript type check across all packages
+- `pnpm test` — Run tests across all packages
 
 ## Project Structure
 
 ```
-src/
-├── client/
-│   ├── index.ts                    # Browser client (WS + sanitization + HMR detection)
-│   └── utils/
-│       ├── describe-value.ts       # Complex value serialization (React elements, DOM, etc.)
-│       ├── parse-stack.ts          # Error stack → StackFrame[] parser
-│       ├── resolve-source-map.ts   # Source map resolution (trace-mapping)
-│       ├── sanitize-differences.ts # Hook difference sanitization
-│       └── sanitize-reason.ts      # WDYR UpdateInfo.reason serialization
-├── server/
-│   ├── index.ts                    # Entry point (MCP + WS server init)
-│   ├── io.ts                       # Socket.io server instance management
-│   ├── ws.ts                       # WebSocket server (EADDRINUSE handling)
-│   ├── pause-state.ts              # Server-side pause state enforcement
-│   ├── relay-client.ts             # Socket.io client for relaying commands to WS owner
-│   ├── store/
-│   │   ├── index.ts                # Store exports + singletons (store, snapshots, registry)
-│   │   ├── render-store.ts         # RenderStore class (JSONL-backed)
-│   │   ├── snapshot-store.ts       # SnapshotStore class (JSON-backed)
-│   │   ├── project-registry.ts     # ProjectRegistry class (tracked components, config, HMR)
-│   │   ├── types.ts                # StoredRender, RenderWithProject, ComponentSummary, Snapshot
-│   │   └── utils/
-│   │       ├── read-jsonl.ts       # JSONL file parser (dict-aware)
-│   │       ├── sanitize-project-id.ts
-│   │       ├── summarize.ts        # Render aggregation into ComponentSummary
-│   │       ├── to-result.ts        # StoredRender → RenderWithProject
-│   │       └── value-dict.ts       # xxhash-wasm dehydrate/hydrate
-│   └── tools/
-│       ├── index.ts                # registerTools barrel
-│       ├── get-renders.ts          # All renders (with stack traces)
-│       ├── get-render-summary.ts   # Renders grouped by component (with durations)
-│       ├── get-commits.ts          # List React commit IDs
-│       ├── get-renders-by-commit.ts # Renders for a specific commit
-│       ├── get-tracked-components.ts # Currently tracked components
-│       ├── get-projects.ts         # Active projects list
-│       ├── save-snapshot.ts        # Save current render summary as named snapshot
-│       ├── list-snapshots.ts       # List saved snapshots
-│       ├── compare-snapshots.ts    # Compare two snapshots (per-component diff)
-│       ├── delete-snapshot.ts      # Delete a snapshot by name
-│       ├── wait-for-renders.ts     # Wait for renders after HMR, with timeout
-│       ├── clear-renders.ts        # Clear stored render data
-│       ├── pause-renders.ts        # Pause render collection (direct or relayed)
-│       ├── resume-renders.ts       # Resume render collection (direct or relayed)
+packages/
+├── types/                          # @why-did-you-render-mcp/types (private, not published)
+│   └── src/
+│       └── index.ts                # Shared types (RenderReport, socket.io events, etc.)
+├── client/                         # @0x1f320.sh/why-did-you-render-mcp-client
+│   ├── tsdown.config.ts
+│   └── src/
+│       ├── index.ts                # Browser client (WS + sanitization + HMR detection)
 │       └── utils/
-│           ├── resolve-project.ts  # Auto-select or disambiguate project
-│           └── text-result.ts      # MCP text response helper
-└── types.ts                        # Shared types (RenderReport, WsMessage)
+│           ├── describe-value.ts   # Complex value serialization (React elements, DOM, etc.)
+│           ├── parse-stack.ts      # Error stack → StackFrame[] parser
+│           ├── resolve-source-map.ts # Source map resolution (trace-mapping)
+│           ├── sanitize-differences.ts # Hook difference sanitization
+│           └── sanitize-reason.ts  # WDYR UpdateInfo.reason serialization
+└── server/                         # @0x1f320.sh/why-did-you-render-mcp
+    ├── tsdown.config.ts
+    └── src/
+        ├── index.ts                # Entry point (MCP + WS server init)
+        ├── io.ts                   # Socket.io server instance management
+        ├── ws.ts                   # WebSocket server (EADDRINUSE handling)
+        ├── pause-state.ts          # Server-side pause state enforcement
+        ├── relay-client.ts         # Socket.io client for relaying commands to WS owner
+        ├── store/
+        │   ├── index.ts            # Store exports + singletons (store, snapshots, registry)
+        │   ├── render-store.ts     # RenderStore class (JSONL-backed)
+        │   ├── snapshot-store.ts   # SnapshotStore class (JSON-backed)
+        │   ├── project-registry.ts # ProjectRegistry class (tracked components, config, HMR)
+        │   ├── types.ts            # StoredRender, RenderWithProject, ComponentSummary, Snapshot
+        │   └── utils/
+        │       ├── read-jsonl.ts   # JSONL file parser (dict-aware)
+        │       ├── sanitize-project-id.ts
+        │       ├── summarize.ts    # Render aggregation into ComponentSummary
+        │       ├── to-result.ts    # StoredRender → RenderWithProject
+        │       └── value-dict.ts   # xxhash-wasm dehydrate/hydrate
+        └── tools/
+            ├── index.ts            # registerTools barrel
+            ├── get-renders.ts      # All renders (with stack traces)
+            ├── get-render-summary.ts # Renders grouped by component (with durations)
+            ├── get-commits.ts      # List React commit IDs
+            ├── get-renders-by-commit.ts # Renders for a specific commit
+            ├── get-tracked-components.ts # Currently tracked components
+            ├── get-projects.ts     # Active projects list
+            ├── save-snapshot.ts    # Save current render summary as named snapshot
+            ├── list-snapshots.ts   # List saved snapshots
+            ├── compare-snapshots.ts # Compare two snapshots (per-component diff)
+            ├── delete-snapshot.ts  # Delete a snapshot by name
+            ├── wait-for-renders.ts # Wait for renders after HMR, with timeout
+            ├── clear-renders.ts    # Clear stored render data
+            ├── pause-renders.ts    # Pause render collection (direct or relayed)
+            ├── resume-renders.ts   # Resume render collection (direct or relayed)
+            └── utils/
+                ├── resolve-project.ts # Auto-select or disambiguate project
+                └── text-result.ts  # MCP text response helper
 ```
 
 ## Git Workflow

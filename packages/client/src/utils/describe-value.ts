@@ -1,4 +1,4 @@
-import type { ReactNodeValue, SafeValue } from "../../types.js"
+import type { ReactNodeValue, SafeValue } from "@why-did-you-render-mcp/types"
 
 const MAX_DEPTH = 8
 

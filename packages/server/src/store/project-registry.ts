@@ -1,4 +1,4 @@
-import type { WdyrConfig } from "../../types.js"
+import type { WdyrConfig } from "@why-did-you-render-mcp/types"
 
 export class ProjectRegistry {
   private readonly trackedComponents = new Map<string, string[]>()

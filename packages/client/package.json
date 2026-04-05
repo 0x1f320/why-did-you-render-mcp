@@ -1,0 +1,58 @@
+{
+  "name": "@0x1f320.sh/why-did-you-render-mcp-client",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Browser client that captures unnecessary React re-renders via why-did-you-render and streams them to the MCP server over WebSocket",
+  "license": "MIT",
+  "author": {
+    "name": "0x1F320",
+    "email": "me@0x1f320.sh",
+    "url": "https://0x1f320.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0x1f320/why-did-you-render-mcp.git",
+    "directory": "packages/client"
+  },
+  "homepage": "https://github.com/0x1f320/why-did-you-render-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/0x1f320/why-did-you-render-mcp/issues"
+  },
+  "keywords": [
+    "why-did-you-render",
+    "react",
+    "performance",
+    "re-render",
+    "mcp",
+    "model-context-protocol",
+    "wdyr",
+    "debugging"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@jridgewell/trace-mapping": "^0.3.31",
+    "@why-did-you-render-mcp/types": "workspace:*",
+    "error-stack-parser": "^2.1.4",
+    "socket.io-client": "^4.8.3"
+  },
+  "peerDependencies": {
+    "@welldone-software/why-did-you-render": "^10.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

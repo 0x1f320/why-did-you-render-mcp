@@ -1,83 +1,31 @@
 {
-  "name": "@0x1f320.sh/why-did-you-render-mcp",
-  "version": "1.1.1",
+  "name": "why-did-you-render-mcp-monorepo",
+  "private": true,
   "type": "module",
-  "description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
   "license": "MIT",
-  "author": {
-    "name": "0x1F320",
-    "email": "me@0x1f320.sh",
-    "url": "https://0x1f320.sh"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/0x1f320/why-did-you-render-mcp.git"
-  },
-  "homepage": "https://github.com/0x1f320/why-did-you-render-mcp#readme",
-  "bugs": {
-    "url": "https://github.com/0x1f320/why-did-you-render-mcp/issues"
-  },
-  "keywords": [
-    "mcp",
-    "react",
-    "why-did-you-render",
-    "performance",
-    "re-render"
-  ],
-  "bin": {
-    "why-did-you-render-mcp": "./dist/server/index.js"
-  },
-  "exports": {
-    ".": "./dist/server/index.js",
-    "./client": {
-      "import": "./dist/client/index.js",
-      "require": "./dist/client/index.cjs"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "client": ["./dist/client/index.d.ts"]
-    }
-  },
-  "files": ["dist"],
   "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
     "check": "biome check .",
     "check:fix": "biome check --fix .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
-  },
-  "dependencies": {
-    "@jridgewell/trace-mapping": "^0.3.31",
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "error-stack-parser": "^2.1.4",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3",
-    "xxhash-wasm": "^1.1.0",
-    "zod": "^3.24.4"
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "test:watch": "pnpm -r run test:watch",
+    "test:coverage": "pnpm -r run test:coverage"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^22.14.1",
     "@vitest/coverage-v8": "^4.1.2",
+    "multi-semantic-release": "^3.0.2",
     "semantic-release": "^25.0.3",
     "tsdown": "^0.12.4",
     "typescript": "^5.8.3",
     "vitest": "^4.1.2"
   },
-  "peerDependencies": {
-    "@welldone-software/why-did-you-render": "^10.0.1"
-  },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
-  "publishConfig": {
-    "access": "public"
-  },
   "pnpm": {
     "ignoredBuiltDependencies": ["@biomejs/biome"]
   }
