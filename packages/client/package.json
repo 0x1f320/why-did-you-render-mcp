@@ -2,7 +2,7 @@
   "name": "@0x1f320.sh/why-did-you-render-mcp-client",
   "version": "1.0.0",
   "type": "module",
-  "description": "Browser client for why-did-you-render-mcp — captures React re-render data and sends it to the MCP server",
+  "description": "Browser client that captures unnecessary React re-renders via why-did-you-render and streams them to the MCP server over WebSocket",
   "license": "MIT",
   "author": {
     "name": "0x1F320",
@@ -23,7 +23,10 @@
     "react",
     "performance",
     "re-render",
-    "mcp"
+    "mcp",
+    "model-context-protocol",
+    "wdyr",
+    "debugging"
   ],
   "exports": {
     ".": {
