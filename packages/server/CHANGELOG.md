@@ -1,3 +1,10 @@
+## @0x1f320.sh/why-did-you-render-mcp [2.0.2-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp@2.0.1...@0x1f320.sh/why-did-you-render-mcp@2.0.2-dev.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* resolve stuck pause state on project-specific resume ([#77](https://github.com/0x1f320/why-did-you-render-mcp/issues/77)) ([97a03f3](https://github.com/0x1f320/why-did-you-render-mcp/commit/97a03f3466097f40d775ba1d3b465aa62aab58ea))
+
 ## @0x1f320.sh/why-did-you-render-mcp [2.0.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp@2.0.0...@0x1f320.sh/why-did-you-render-mcp@2.0.1) (2026-04-05)
 
 
