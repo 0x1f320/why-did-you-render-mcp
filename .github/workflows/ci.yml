@@ -39,8 +39,8 @@ jobs:
       - run: pnpm test
 
       - if: github.event_name == 'push'
-        run: pnpm exec multi-semantic-release
+        run: pnpm exec multi-semantic-release --sequential-init
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=4096
+          NODE_OPTIONS: --max-old-space-size=8192
