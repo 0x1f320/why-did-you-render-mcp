@@ -1,4 +1,4 @@
-import type { RenderReport } from "../../types.js"
+import type { RenderReport } from "@why-did-you-render-mcp/types"
 
 export interface StoredRender extends RenderReport {
   projectId: string

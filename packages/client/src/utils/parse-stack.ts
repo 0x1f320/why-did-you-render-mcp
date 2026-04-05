@@ -1,5 +1,5 @@
+import type { StackFrame } from "@why-did-you-render-mcp/types"
 import ErrorStackParser from "error-stack-parser"
-import type { StackFrame } from "../../types.js"
 import { resolveLocation } from "./resolve-source-map.js"
 
 const IGNORED_FILES = [

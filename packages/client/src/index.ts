@@ -1,12 +1,12 @@
 import type { WhyDidYouRenderOptions } from "@welldone-software/why-did-you-render"
-import { type Socket, io } from "socket.io-client"
+import type { UpdateInfo } from "@welldone-software/why-did-you-render"
 import type {
   ClientToServerEvents,
   RenderReport,
   ServerToClientEvents,
-  UpdateInfo,
   WdyrConfig,
-} from "../types.js"
+} from "@why-did-you-render-mcp/types"
+import { type Socket, io } from "socket.io-client"
 import { parseStack } from "./utils/parse-stack.js"
 import { sanitizeReason } from "./utils/sanitize-reason.js"
 

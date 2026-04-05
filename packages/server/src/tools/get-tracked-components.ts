@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import type { WdyrConfig } from "@why-did-you-render-mcp/types"
 import { z } from "zod"
-import type { WdyrConfig } from "../../types.js"
 import { registry, store } from "../store/index.js"
 import { resolveProject } from "./utils/resolve-project.js"
 import { textResult } from "./utils/text-result.js"

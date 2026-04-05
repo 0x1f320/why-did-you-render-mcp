@@ -6,12 +6,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "noEmit": true
   },
-  "references": [
-    { "path": "packages/types" },
-    { "path": "packages/client" },
-    { "path": "packages/server" }
-  ],
-  "include": []
+  "include": ["src/**/*"]
 }
