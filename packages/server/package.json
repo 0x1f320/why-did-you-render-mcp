@@ -2,7 +2,7 @@
   "name": "@0x1f320.sh/why-did-you-render-mcp",
   "version": "2.0.0",
   "type": "module",
-  "description": "MCP server that collects why-did-you-render data from browser and exposes it to coding agents",
+  "description": "MCP server that receives why-did-you-render reports from the browser and exposes them as tools for AI coding agents to diagnose React performance issues",
   "license": "MIT",
   "author": {
     "name": "0x1F320",
