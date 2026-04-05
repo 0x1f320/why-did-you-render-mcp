@@ -36,8 +36,8 @@
       "@semantic-release/git",
       {
         "assets": [
-          "packages/server/package.json",
-          "packages/server/CHANGELOG.md"
+          "package.json",
+          "CHANGELOG.md"
         ],
         "message": "chore(release): server ${nextRelease.version}\n\n${nextRelease.notes}"
       }
