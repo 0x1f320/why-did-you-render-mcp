@@ -1,3 +1,10 @@
+## @0x1f320.sh/why-did-you-render-mcp-client [1.0.3-dev.2](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp-client@1.0.3-dev.1...@0x1f320.sh/why-did-you-render-mcp-client@1.0.3-dev.2) (2026-04-05)
+
+
+### Bug Fixes
+
+* run biome format on package.json before release commit ([#73](https://github.com/0x1f320/why-did-you-render-mcp/issues/73)) ([4f28973](https://github.com/0x1f320/why-did-you-render-mcp/commit/4f289739a6a984015d3537af22fb667cde532197))
+
 ## @0x1f320.sh/why-did-you-render-mcp-client [1.0.3-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp-client@1.0.2...@0x1f320.sh/why-did-you-render-mcp-client@1.0.3-dev.1) (2026-04-05)
 
 
