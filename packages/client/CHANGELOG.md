@@ -1,3 +1,10 @@
+## @0x1f320.sh/why-did-you-render-mcp-client [1.0.5](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp-client@1.0.4...@0x1f320.sh/why-did-you-render-mcp-client@1.0.5) (2026-04-05)
+
+
+### Bug Fixes
+
+* add top-level main/types fields for legacy moduleResolution compat ([#79](https://github.com/0x1f320/why-did-you-render-mcp/issues/79)) ([bbc51fe](https://github.com/0x1f320/why-did-you-render-mcp/commit/bbc51fe561eced9e5581f25e580da71fa44b7e02))
+
 ## @0x1f320.sh/why-did-you-render-mcp-client [1.0.5-dev.1](https://github.com/0x1f320/why-did-you-render-mcp/compare/@0x1f320.sh/why-did-you-render-mcp-client@1.0.4...@0x1f320.sh/why-did-you-render-mcp-client@1.0.5-dev.1) (2026-04-05)
 
 
