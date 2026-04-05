@@ -1,6 +1,6 @@
 {
   "name": "@0x1f320.sh/why-did-you-render-mcp-client",
-  "version": "1.0.3",
+  "version": "1.0.4-dev.1",
   "type": "module",
   "description": "Browser client that captures unnecessary React re-renders via why-did-you-render and streams them to the MCP server over WebSocket",
   "license": "MIT",
