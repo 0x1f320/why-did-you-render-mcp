@@ -28,7 +28,7 @@ The **client** runs inside your React app alongside `why-did-you-render`. Whenev
 ## Installation
 
 ```sh
-npm install @0x1f320.sh/why-did-you-render-mcp @welldone-software/why-did-you-render
+npm install @0x1f320.sh/why-did-you-render-mcp@latest @welldone-software/why-did-you-render
 ```
 
 ## Setup
@@ -65,7 +65,7 @@ const { notifier } = buildOptions({
 <summary>Claude Code</summary>
 
 ```sh
-claude mcp add why-did-you-render -- npx -y @0x1f320.sh/why-did-you-render-mcp
+claude mcp add why-did-you-render -- npx -y @0x1f320.sh/why-did-you-render-mcp@latest
 ```
 
 </details>
@@ -74,7 +74,7 @@ claude mcp add why-did-you-render -- npx -y @0x1f320.sh/why-did-you-render-mcp
 <summary>Claude Desktop</summary>
 
 ```sh
-claude mcp add-json why-did-you-render '{"command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp"]}' -s user
+claude mcp add-json why-did-you-render '{"command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp@latest"]}' -s user
 ```
 
 Or manually edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) / `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
@@ -84,7 +84,7 @@ Or manually edit `~/Library/Application Support/Claude/claude_desktop_config.jso
   "mcpServers": {
     "why-did-you-render": {
       "command": "npx",
-      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp@latest"]
     }
   }
 }
@@ -96,7 +96,7 @@ Or manually edit `~/Library/Application Support/Claude/claude_desktop_config.jso
 <summary>Cursor</summary>
 
 ```sh
-cursor --add-mcp '{"name":"why-did-you-render","command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp"]}'
+cursor --add-mcp '{"name":"why-did-you-render","command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp@latest"]}'
 ```
 
 Or add to `.cursor/mcp.json` in your project:
@@ -106,7 +106,7 @@ Or add to `.cursor/mcp.json` in your project:
   "mcpServers": {
     "why-did-you-render": {
       "command": "npx",
-      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp@latest"]
     }
   }
 }
@@ -124,7 +124,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
   "mcpServers": {
     "why-did-you-render": {
       "command": "npx",
-      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp@latest"]
     }
   }
 }
@@ -136,7 +136,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 <summary>VS Code (GitHub Copilot)</summary>
 
 ```sh
-code --add-mcp '{"name":"why-did-you-render","command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp"]}'
+code --add-mcp '{"name":"why-did-you-render","command":"npx","args":["-y","@0x1f320.sh/why-did-you-render-mcp@latest"]}'
 ```
 
 Or add to `.vscode/mcp.json` in your project:
@@ -146,7 +146,7 @@ Or add to `.vscode/mcp.json` in your project:
   "servers": {
     "why-did-you-render": {
       "command": "npx",
-      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp"]
+      "args": ["-y", "@0x1f320.sh/why-did-you-render-mcp@latest"]
     }
   }
 }
