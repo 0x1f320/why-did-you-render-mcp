@@ -1,6 +1,6 @@
 {
   "name": "@0x1f320.sh/why-did-you-render-mcp",
-  "version": "2.0.0",
+  "version": "2.0.1-dev.3",
   "type": "module",
   "description": "MCP server that receives why-did-you-render reports from the browser and exposes them as tools for AI coding agents to diagnose React performance issues",
   "license": "MIT",
@@ -42,11 +42,13 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "@why-did-you-render-mcp/types": "workspace:*",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "xxhash-wasm": "^1.1.0",
     "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@why-did-you-render-mcp/types": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
