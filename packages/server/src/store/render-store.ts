@@ -8,7 +8,7 @@ import {
 } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
-import type { RenderReport } from "../../types.js"
+import type { RenderReport } from "@why-did-you-render-mcp/types"
 import type {
   BufferMeta,
   CommitInfo,

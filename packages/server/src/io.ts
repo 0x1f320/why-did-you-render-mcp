@@ -1,10 +1,10 @@
-import type { Server } from "socket.io"
 import type {
   ClientToServerEvents,
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
-} from "../types.js"
+} from "@why-did-you-render-mcp/types"
+import type { Server } from "socket.io"
 
 export type IoServer = Server<
   ClientToServerEvents,
